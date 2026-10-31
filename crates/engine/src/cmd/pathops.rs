@@ -14,7 +14,10 @@ use vectorcraft_pathops as po;
 use vectorcraft_pathops::{BoolOp, PathfinderOp};
 
 use super::edit::selected_roots;
-use super::*;
+use super::{
+    CommandSpec, EngineError, Result, Session, always, bad, bool_or, checked_ids_or_selection, cmd, has_doc, has_multi, has_selection, number_or,
+    str_param, switch_or,
+};
 
 pub fn specs() -> Vec<CommandSpec> {
     vec![
@@ -23,90 +26,90 @@ pub fn specs() -> Vec<CommandSpec> {
             "Unite",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::Unite)
+            |s, p| run_pf(s, p, PathfinderOp::Unite)
         ),
         cmd!(
             "object.pathfinder.minusFront",
             "Minus Front",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::MinusFront)
+            |s, p| run_pf(s, p, PathfinderOp::MinusFront)
         ),
         cmd!(
             "object.pathfinder.intersect",
             "Intersect",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::Intersect)
+            |s, p| run_pf(s, p, PathfinderOp::Intersect)
         ),
         cmd!(
             "object.pathfinder.exclude",
             "Exclude",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::Exclude)
+            |s, p| run_pf(s, p, PathfinderOp::Exclude)
         ),
         cmd!(
             "object.pathfinder.divide",
             "Divide",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::Divide)
+            |s, p| run_pf(s, p, PathfinderOp::Divide)
         ),
         cmd!(
             "object.pathfinder.trim",
             "Trim",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::Trim)
+            |s, p| run_pf(s, p, PathfinderOp::Trim)
         ),
         cmd!(
             "object.pathfinder.merge",
             "Merge",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::Merge)
+            |s, p| run_pf(s, p, PathfinderOp::Merge)
         ),
         cmd!(
             "object.pathfinder.crop",
             "Crop",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_multi,
-            |s, _| run_pf(s, PathfinderOp::Crop)
+            |s, p| run_pf(s, p, PathfinderOp::Crop)
         ),
         cmd!(
             "object.pathfinder.outline",
             "Outline",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::Outline)
+            |s, p| run_pf(s, p, PathfinderOp::Outline)
         ),
         cmd!(
             "object.pathfinder.minusBack",
             "Minus Back",
             ["Window", "Pathfinder"],
             None,
-            "{ids?: [id…] (selected first; default: the selection)} operate on the selected objects (back → front) → {ids}",
+            "{ids?: [id…] (selected first; default: the selection), precision?: pt 0.001..10, removeRedundantPoints?: bool, removeUnpainted?: bool (default: the Pathfinder Options, see object.pathfinder.options; the values used join the journal entry)} operate on the selected objects (back → front) → {ids}",
             has_selection,
-            |s, _| run_pf(s, PathfinderOp::MinusBack)
+            |s, p| run_pf(s, p, PathfinderOp::MinusBack)
         ),
         cmd!(
             "object.pathfinder.trap",
@@ -116,6 +119,15 @@ pub fn specs() -> Vec<CommandSpec> {
             "{ids?: [id…] (selected first; default: the selection), thickness?: pt 0.01..5000 (0.25; how far the lighter colour reaches into the darker one across vertical edges), heightWidth?: % 1..1000 (100; the reach across horizontal edges as a percentage of the vertical one), tintReduction?: % 0..100 (40; the trap paints the lighter colour at this percentage of its tint), trapsWithProcessColor?: bool (false; a swatch (spot) colour's trap is painted with its CMYK process equivalent), reverseTraps?: bool (false; the darker colour spreads into the lighter one, except a rich black)} adds overprinting traps where the selected objects' visible areas of different solid colours meet, grouped directly above the topmost selected object and selected; the objects stay as they are → {ids}",
             has_selection,
             trap
+        ),
+        cmd!(
+            "object.pathfinder.options",
+            "Pathfinder Options…",
+            ["Window", "Pathfinder"],
+            None,
+            "{precision?: pt 0.001..10 (0.01; how closely the Pathfinder operations follow the paths: results are refit to within it and pieces thinner than it are dropped), removeRedundantPoints?: bool (false; the results lose the anchors that don't change their shape), removeUnpainted?: bool (false; Divide and Outline leave out the pieces of objects with no fill)} Pathfinder Options, kept in the preferences and used by every later Shape Mode and Pathfinder operation (not Trap); {} reads them → the options",
+            always,
+            pathfinder_options
         ),
         cmd!(
             "object.path.outlineStroke",
@@ -143,6 +155,15 @@ pub fn specs() -> Vec<CommandSpec> {
             "{tolerance?: pt (1), level?: 0..100 (the Simplify slider, in place of tolerance: 0 fewest anchor points, 50 is 1 pt, every 10 levels halves or doubles it), auto?: bool (Auto-Simplify: the lowest level whose tolerance is at most 1/400 of the selection's longer side, or 100 when that side is under 12.5 pt), cornerAngle?: deg (30), straightLines?: bool, wholePaths?: bool (false: a path with segments direct-selected, or between direct-selected anchors, simplifies only each run of them between its end anchors, which stay as they are, and keeps the runs selected; true simplifies those paths whole)} → {ids, before, after} anchor counts, and the level used with level or auto",
             has_selection,
             simplify
+        ),
+        cmd!(
+            "object.path.smooth",
+            "Smooth…",
+            ["Object", "Path"],
+            None,
+            "{level?: 0..100 (50; the Smooth slider: 0 minimum smoothing, the path staying within 0.1% of its longer side, 100 maximum: refitted with curves within up to 2.5% of it, corners kept only where the path turns back, never with more anchor points), auto?: bool (Auto-Smooth: level 50), ids?: [id…] (default: the selection)} smooth each path under the objects, compound path members included, as one undo step → {ids, before, after} anchor counts, and the level used",
+            has_selection,
+            smooth
         ),
         cmd!("object.path.addAnchorPoints", "Add Anchor Points", ["Object", "Path"], None, "{} → {ids}", has_selection, add_anchor_points),
         cmd!(
@@ -205,7 +226,7 @@ fn ids_json(ids: &[NodeId]) -> Value {
 
 /// Paint identity carried through a Pathfinder operation.
 #[derive(Clone, Debug, PartialEq)]
-struct Style {
+pub(crate) struct Style {
     appearance: Appearance,
     opacity: f32,
     blend: BlendMode,
@@ -215,7 +236,7 @@ impl Style {
     fn of(n: &Node) -> Self {
         Style { appearance: (*n.appearance).clone(), opacity: n.opacity, blend: n.blend }
     }
-    fn apply(&self, n: &mut Node) {
+    pub(crate) fn apply(&self, n: &mut Node) {
         n.appearance = self.appearance.clone().into();
         n.opacity = self.opacity;
         n.blend = self.blend;
@@ -246,7 +267,7 @@ pub(crate) fn text_outline(t: &TextObject) -> PathData {
     PathData::from_bezpath(&lay.to_bezpath()).transformed(t.xf)
 }
 
-fn style_of(n: &Node) -> Style {
+pub(crate) fn style_of(n: &Node) -> Style {
     match &n.kind {
         NodeKind::Text(t) => Style { appearance: t.first_style().appearance(), opacity: n.opacity, blend: n.blend },
         _ => Style::of(n),
@@ -270,6 +291,20 @@ fn each_leaf(n: &Node, f: &mut impl FnMut(&Node)) {
             }
         }
         _ => {}
+    }
+}
+
+/// [`leaves`] as a Pathfinder operation takes them: a compound shape is one shape, the area it
+/// draws painted as it is (its members as they are past a live Pathfinder's budget).
+pub(crate) fn pf_leaves(n: &Node, out: &mut Vec<Node>) {
+    match &n.kind {
+        NodeKind::Group { children, .. } | NodeKind::Layer { children, .. } => {
+            match vectorcraft_render::effects::compound_shape_art(n, vectorcraft_render::effects::text_outliner()) {
+                Some(art) => out.push(art),
+                None => children.iter().for_each(|c| pf_leaves(c, out)),
+            }
+        }
+        _ => leaves(n, out),
     }
 }
 
@@ -379,6 +414,82 @@ pub(crate) fn remove_each(d: &mut Document, ids: &[NodeId]) -> Result<()> {
 
 // ---------- Pathfinder ----------
 
+/// Pathfinder panel › Pathfinder Options (`object.pathfinder.options`, the `pathfinder` preference
+/// group), which every Shape Mode and Pathfinder operation of the panel uses. The defaults leave
+/// the results as they were before the options existed.
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct PathfinderOptions {
+    /// How closely results follow the paths (pt): they are refit to within it and pieces thinner
+    /// than it are dropped ([`po::pathfinder_with`]).
+    pub precision: f64,
+    /// Results lose the anchors that don't change their shape (to within `precision`).
+    pub remove_redundant_points: bool,
+    /// Divide and Outline leave out the pieces of objects with no fill.
+    pub remove_unpainted: bool,
+}
+
+impl Default for PathfinderOptions {
+    fn default() -> Self {
+        Self { precision: po::DEFAULT_PRECISION, remove_redundant_points: false, remove_unpainted: false }
+    }
+}
+
+/// The range of Pathfinder Options › Precision (pt).
+pub const PATHFINDER_PRECISION_RANGE: std::ops::RangeInclusive<f64> = 0.001..=10.0;
+
+impl PathfinderOptions {
+    /// These options with those `p` names (`precision` in pt or a string with a unit), or why `p`
+    /// can't set them.
+    pub(crate) fn merged(&self, p: &Value) -> std::result::Result<Self, String> {
+        let given = match p {
+            Value::Null => return Ok(*self),
+            Value::Object(given) => given,
+            _ => return Err("`pathfinder` must be an object".into()),
+        };
+        let mut o = *self;
+        for (key, v) in given {
+            let flag = || v.as_bool().ok_or_else(|| format!("`{key}` must be true or false"));
+            match key.as_str() {
+                "precision" => {
+                    o.precision =
+                        len_param(p, key).filter(|v| PATHFINDER_PRECISION_RANGE.contains(v)).ok_or("precision must be from 0.001 to 10 pt")?;
+                }
+                "removeRedundantPoints" => o.remove_redundant_points = flag()?,
+                "removeUnpainted" => o.remove_unpainted = flag()?,
+                k => {
+                    let path = "pathfinder";
+                    return Err(format!("unknown option `{path}.{k}`"));
+                }
+            }
+        }
+        Ok(o)
+    }
+}
+
+fn pathfinder_options(s: &mut Session, p: &Value) -> Result<Value> {
+    s.prefs.pathfinder = s.prefs.pathfinder.merged(p).map_err(|e| bad("object.pathfinder.options", e))?;
+    Ok(json!(s.prefs.pathfinder))
+}
+
+/// The last part of the id of `op`'s command (`object.pathfinder.…`).
+fn pf_id(op: PathfinderOp) -> &'static str {
+    match op {
+        PathfinderOp::Unite => "unite",
+        PathfinderOp::MinusFront => "minusFront",
+        PathfinderOp::Intersect => "intersect",
+        PathfinderOp::Exclude => "exclude",
+        PathfinderOp::Divide => "divide",
+        PathfinderOp::Trim => "trim",
+        PathfinderOp::Merge => "merge",
+        PathfinderOp::Crop => "crop",
+        PathfinderOp::Outline => "outline",
+        PathfinderOp::MinusBack => "minusBack",
+        PathfinderOp::HardMix => "hardMix",
+        PathfinderOp::SoftMix => "softMix",
+    }
+}
+
 fn pf_label(op: PathfinderOp) -> &'static str {
     match op {
         PathfinderOp::Unite => "Unite",
@@ -396,7 +507,25 @@ fn pf_label(op: PathfinderOp) -> &'static str {
     }
 }
 
-fn run_pf(s: &mut Session, op: PathfinderOp) -> Result<Value> {
+/// The Pathfinder Options an operation uses: those `p` gives, else the preferences'. They join the
+/// command's journal entry, so replaying it gives the same result whatever the preferences are then.
+fn pf_options(s: &mut Session, p: &Value, id: &str) -> Result<PathfinderOptions> {
+    let mut stored = s.prefs.pathfinder;
+    if !PATHFINDER_PRECISION_RANGE.contains(&stored.precision) {
+        // A preferences file edited by hand: the default, rather than refitting everything away.
+        stored.precision = po::DEFAULT_PRECISION;
+    }
+    let keys = ["precision", "removeRedundantPoints", "removeUnpainted"];
+    let given: serde_json::Map<String, Value> =
+        p.as_object().into_iter().flatten().filter(|(k, _)| keys.contains(&k.as_str())).map(|(k, v)| (k.clone(), v.clone())).collect();
+    let options = stored.merged(&Value::Object(given)).map_err(|e| bad(id, e))?;
+    s.note_journal("precision", json!(options.precision));
+    s.note_journal("removeRedundantPoints", json!(options.remove_redundant_points));
+    s.note_journal("removeUnpainted", json!(options.remove_unpainted));
+    Ok(options)
+}
+
+fn run_pf(s: &mut Session, p: &Value, op: PathfinderOp) -> Result<Value> {
     let roots = selected_roots(s)?;
     if roots.is_empty() {
         return Err(EngineError::Other("nothing selected".into()));
@@ -404,6 +533,7 @@ fn run_pf(s: &mut Session, op: PathfinderOp) -> Result<Value> {
     let shape_mode =
         matches!(op, PathfinderOp::Unite | PathfinderOp::MinusFront | PathfinderOp::Intersect | PathfinderOp::Exclude | PathfinderOp::MinusBack);
     let label = pf_label(op);
+    let options = pf_options(s, p, &format!("object.pathfinder.{}", pf_id(op)))?;
     let ids = s.edit(label, |d, sel| {
         // Build the stack (back → front); names are separate from paint/style identity.
         let mut styles: Vec<Style> = vec![];
@@ -438,7 +568,7 @@ fn run_pf(s: &mut Session, op: PathfinderOp) -> Result<Value> {
         for id in &roots {
             let n = d.node(*id).ok_or(EngineError::NoNode(*id))?;
             let mut lv = vec![];
-            leaves(n, &mut lv);
+            pf_leaves(n, &mut lv);
             if lv.is_empty() {
                 continue;
             }
@@ -452,7 +582,12 @@ fn run_pf(s: &mut Session, op: PathfinderOp) -> Result<Value> {
                 let parts: Vec<(PathData, FillRule)> = lv.iter().filter_map(node_path).collect();
                 let refs: Vec<(&PathData, FillRule)> = parts.iter().map(|(p, r)| (p, *r)).collect();
                 let name = n.name.clone().or_else(|| lv.iter().find_map(|l| l.name.clone()));
-                push(po::unite_all(&refs), FillRule::NonZero, style_of(top), name);
+                push(
+                    po::try_unite_all_with(&refs, options.precision).map_err(|e| EngineError::Other(e.to_string()))?,
+                    FillRule::NonZero,
+                    style_of(top),
+                    name,
+                );
             } else {
                 for l in &lv {
                     if let Some((p, r)) = node_path(l) {
@@ -467,7 +602,18 @@ fn run_pf(s: &mut Session, op: PathfinderOp) -> Result<Value> {
         if shapes.iter().any(|s| s.path.subpaths.iter().any(|sp| sp.anchors.iter().any(|a| !(a.p.x.is_finite() && a.p.y.is_finite())))) {
             return Err(EngineError::Other("paths contain invalid coordinates".into()));
         }
-        let results = po::pathfinder(op, &shapes);
+        let mut results = po::pathfinder_with(op, &shapes, options.precision);
+        if options.remove_unpainted && matches!(op, PathfinderOp::Divide | PathfinderOp::Outline) {
+            // Pathfinder Options › Divide and Outline Will Remove Unpainted Artwork: the pieces
+            // of objects with no fill (or only hidden ones) go.
+            let filled = |st: &Style| st.appearance.items.iter().any(|i| matches!(i, AppearanceItem::Fill(f) if f.visible && !f.paint.is_none()));
+            results.retain(|r| styles.get(r.key as usize).is_some_and(filled));
+        }
+        if options.remove_redundant_points {
+            for r in &mut results {
+                r.path = po::remove_redundant_points(&r.path, options.precision);
+            }
+        }
         if results.iter().all(|r| r.path.is_empty()) {
             return Err(EngineError::Other(format!("{label} produced an empty result")));
         }
@@ -837,20 +983,20 @@ fn path_ids(d: &Document, roots: &[NodeId]) -> Vec<NodeId> {
 /// selected segments when they were picked as segments). `None` selects the path whole.
 type PartSelection = Option<(BTreeSet<AnchorRef>, Option<BTreeSet<SegmentRef>>)>;
 
-/// Replace each path under the selection ([`path_ids`]) by what `f` makes of it, given its
+/// Replace each path under `roots` ([`path_ids`]) by what `f` makes of it, given its
 /// direct-selected anchors and picked segments (none when it is selected whole): → (their ids, how
 /// many anchors they have before and after). A path that `f` would empty or returns unchanged is
 /// left as it is, with its live shape and its direct selection; a replaced path loses its live
 /// shape and has the direct selection `f` gives it.
 fn edit_paths(
     s: &mut Session,
+    roots: &[NodeId],
     label: &str,
     f: impl Fn(&PathData, Option<&BTreeSet<AnchorRef>>, Option<&BTreeSet<SegmentRef>>) -> (PathData, PartSelection),
 ) -> Result<(Vec<NodeId>, usize, usize)> {
-    let roots = selected_roots(s)?;
     let st = s.doc()?;
     let (d, sel) = (&st.doc, &st.selection);
-    let ids = path_ids(d, &roots);
+    let ids = path_ids(d, roots);
     if ids.is_empty() {
         return Err(EngineError::Other(format!("{label}: select paths")));
     }
@@ -944,7 +1090,8 @@ fn simplify(s: &mut Session, p: &Value) -> Result<Value> {
     let whole = bool_or(p, "wholePaths", false);
     // A path with segments direct-selected simplifies only their runs, and keeps those runs (and the
     // other anchors it had selected) direct-selected.
-    let (ids, before, after) = edit_paths(s, "Simplify", |path, anchors, segments| {
+    let roots = selected_roots(s)?;
+    let (ids, before, after) = edit_paths(s, &roots, "Simplify", |path, anchors, segments| {
         let Some(picked) = selected_segments(path, anchors, segments).filter(|_| !whole) else {
             return (po::simplify_with(path, &opts), None);
         };
@@ -964,8 +1111,20 @@ fn simplify(s: &mut Session, p: &Value) -> Result<Value> {
     Ok(out)
 }
 
+/// Object › Path › Smooth (`object.path.smooth`): [`po::smooth_level`] on each path under the
+/// objects given or selected, as one undo step; Auto-Smooth (`auto`) uses [`po::SMOOTH_AUTO_LEVEL`].
+fn smooth(s: &mut Session, p: &Value) -> Result<Value> {
+    const C: &str = "object.path.smooth";
+    let level = number_or(p, "level", po::SMOOTH_AUTO_LEVEL, C)?.round().clamp(0.0, 100.0);
+    let level = if switch_or(p, "auto", false, C)? { po::SMOOTH_AUTO_LEVEL } else { level };
+    let roots = checked_ids_or_selection(s, p, C)?;
+    let (ids, before, after) = edit_paths(s, &roots, "Smooth", |path, _, _| (po::smooth_level(path, level), None))?;
+    Ok(json!({ "ids": ids.iter().map(|i| i.0).collect::<Vec<_>>(), "before": before, "after": after, "level": level }))
+}
+
 fn add_anchor_points(s: &mut Session, _: &Value) -> Result<Value> {
-    let (ids, before, after) = edit_paths(s, "Add Anchor Points", |path, _, _| (po::add_anchor_points(path), None))?;
+    let roots = selected_roots(s)?;
+    let (ids, before, after) = edit_paths(s, &roots, "Add Anchor Points", |path, _, _| (po::add_anchor_points(path), None))?;
     Ok(json!({ "ids": ids.iter().map(|i| i.0).collect::<Vec<_>>(), "before": before, "after": after }))
 }
 
