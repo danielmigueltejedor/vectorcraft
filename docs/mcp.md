@@ -843,7 +843,10 @@ PostScript form, which keeps layers, groups, compound paths and clipping groups 
 of `range` (default all; `{name}-{artboard}.ai` when several, listed in the result's `files`), with
 `transparentImages: "flatten"` (default) or `"omit"` for images with see-through pixels, opacity or a blending mode,
 `hiddenObjects: "layer"` (default: a hidden layer of each layer's hidden objects), `"omit"` or `"visible"`, and
-`outlineText: true` to write type as outlines instead of text objects. An image that can't be decoded is left out of
+`outlineText: true` to write type as outlines instead of text objects. Type with rotated characters (Character
+Rotation) is always written as outlines, which keep the rotation; without `outlineText: true` this gives the warning "type with rotated characters is
+written as outlines, which keep the rotation, and is no longer editable text (legacy .ai text can't rotate
+characters)". An image that can't be decoded is left out of
 the file and does not show in art that is flattened or whose raster effects are expanded; `warnings` carries "an image
 couldn't be decoded and is missing from the picture" once for all such images. From the CLI: `vectorcraft-cli convert in.svg
 out.ai --ai-version 7 [--hidden-objects layer|omit|visible] [--transparent-images flatten|omit] [--outline-text]
@@ -1569,10 +1572,11 @@ already walks Image Trace. Short agent entry points:
   of `symbol.list` carry `nineSlice`: the guides or `null`; `type` is Symbol Type, `static` by default for the command
   and `dynamic` by default in the Symbol Options dialog),
   `symbol.place {name?, x?, y?}`, `symbol.breakLink {ids?}`, `symbol.replace`,
-  `symbol.edit {id?, name?, x?, y?, artboard?, viewCenter?}` (symbol editing mode: the symbol's art on a temporary
+  `symbol.edit {id?, ids?, name?, x?, y?, artboard?, viewCenter?}` (symbol editing mode: the symbol's art on a temporary
   isolated layer, where the instance `id` shows it or centered on (x, y), by default on the center of artboard
   `artboard`, the active one the app passes, or in a document without artboards on `viewCenter`, the view's center the
-  app passes; every instance follows each edit and stays linked), `symbol.exitEditing`
+  app passes; every instance follows each edit and stays linked; while another symbol is edited, that edit ends first,
+  and a call that fails leaves it open), `symbol.exitEditing`
   (leaves the mode; without an edit it adds no undo step), `symbol.duplicate`,
   `symbol.selectInstances {name}`, `symbol.delete {name | names, expandInstances?}` (`names` deletes several in one
   undo step). `symbol.new` and `symbol.duplicate {name, newName?}` trim the white space around the
@@ -1586,7 +1590,8 @@ already walks Image Trace. Short agent entry points:
   a path that names no object. `symbol.instance.reset {ids?}` drops the selected instances' changes (the Properties
   panel's Reset). Redefining the symbol (`symbol.update`) reshapes every instance and keeps each change whose path the
   new art still has; `symbol.breakLink` bakes the changes into the expanded art; `symbol.edit` edits the symbol's own
-  art, and each edit there keeps the changes whose path the art still has; making the symbol static drops them.
+  art, and each edit there keeps the changes whose path the art still has; making the symbol static drops them, and
+  so does `symbol.replace` with a different symbol (a replace with the instance's own symbol keeps them).
 
 ```json
 {"name":"run_command","arguments":{"command":"symbol.instance.setAppearance","params":{"id":42,"path":[1],"fill":"#d0021b","opacity":80}}}
@@ -1634,7 +1639,8 @@ already walks Image Trace. Short agent entry points:
   `variable.loadLibrary` that would delete or define a variable (below) fail with "variables are locked";
   `variable.bind`, `variable.unbind` and the `dataset.*` commands still run (except a `dataset.import` whose header
   would define a variable, below), and `variable.list` reports `locked`.
-- Data sets: `dataset.list`, `dataset.new {name, values?}`, `dataset.set {name, values?}`, `dataset.rename`,
+- Data sets: `dataset.list`, `dataset.new {name, values?}`, `dataset.set {name, newName?, values?}` (`newName` also
+  renames the row, in the same undo step; Edit Data Set's Name field sends it), `dataset.rename`,
   `dataset.delete`, `dataset.capture`, `dataset.update`, `dataset.select {name}`, `dataset.next` /
   `dataset.prev` (each `dataset.select` / next / prev is one undo step over every bound object), `dataset.import {path|data|dataBase64|csv}` /
   `dataset.export {path?}` (CSV: `name`, then one column per variable). `dataset.import` also reads tab-separated
@@ -1642,12 +1648,23 @@ already walks Image Trace. Short agent entry points:
   first free names `Data Set 1`, `Data Set 2` and so on. An import error about a row's values or name gives the file
   line the row starts on. A header cell that names no variable defines one, unbound, in the same undo step as the
   rows. `#Shown` defines a visibility variable `Shown`, `@Photo` defines an image variable `Photo`, and a cell without
-  a prefix defines a text variable. A prefixed cell whose name is already a variable of the prefix's kind names it;
+  a prefix defines a text variable. `dataset.export` writes a visibility variable's header as `#Shown` and an image
+  variable's as `@Photo`, and a text or graph variable's as its name alone. Its reply's `warning` names the variables
+  whose header or values make an import into a document without them refuse the file (a `%` header, a `#` header
+  whose values aren't true or false). Otherwise it names the variables that such an import does not read back with
+  their kind: text variables whose names start with `#` or `@`, and graph variables. Export is refused, naming both variables, when a variable's header is
+  another variable's name (a visibility variable `Show` next to a text variable `#Show`). A prefixed cell whose name
+  is already a variable of the prefix's kind names it;
   one whose name is a variable of another kind fails the import. A `%` cell that isn't a variable's exact name (graph
-  data files) is refused. The reply's `defined` lists the variables the import defined. While the variables are
+  data files) is refused, and so are two cells that name one variable (`City` twice, or `Shown` and `#Shown`). The
+  reply's `defined` lists the variables the import defined. While the variables are
   locked, an import whose header would define a variable fails with "variables are locked".
+  A `dataset.import` file that isn't UTF-8 is read as Windows-1252, unless it starts with the UTF-8 byte-order mark.
+  A file that starts with a UTF-16 byte-order mark is read as UTF-16, and a file without one that holds NUL bytes is
+  refused. `csv` and `data` are read as the text they hold.
 - Variable libraries: `variable.loadLibrary {path|xml|dataBase64}` (the Variables panel menu's Load Variable
-  Library…) replaces the document's variables and data sets with a variable library's in one undo step. The library
+  Library…) replaces the document's variables and data sets with a variable library's in one undo step. A load, like a
+  `dataset.import`, adds no undo step when it leaves the variables and data sets as they were. The library
   is XML whose `variableSets` element holds `variableSet` elements, each with a `variables` element of `variable`
   elements (`varName`, `trait`) and a `sampleDataSets` element of `sampleDataSet` elements (`dataSetName`). Every
   variable of the document is deleted with its bindings and values, and every data set is deleted. Then the library's
@@ -1677,6 +1694,11 @@ already walks Image Trace. Short agent entry points:
   goes on in that set. The panel's Delete Selection (the trash button and the panel menu's Delete) asks before it runs
   this for the selected sets, and Shift-click on a set's name selects the sets from the current one to it. Undo does
   not restore a deleted set.
+  `ui.actionSet.duplicate {set?: index, action?: index}` copies the action at `action` in set `set` to right after it
+  in the same set, and returns `{set, action}`; without `action` it copies the set with all its actions to right after
+  it, by default the current set, and returns `{set}`. The copy is named after the original with " copy" added, a
+  copied set gets an id of its own, and the copy is selected. An index past the last set or action is an error. The
+  panel menu's Duplicate runs this for the selected action, else the current set.
 - Image Trace: `imageTrace.presets`, `imageTrace.make {id?, preset?, params?, view?}` (or `imageTrace.makeAndExpand`),
   `imageTrace.setView`, `imageTrace.expand`, `imageTrace.release`. A key inside `params` that is not one of the trace
   settings, such as `colours`, is an error that names it and the nearest setting (`colors`), as for a command's own keys.
@@ -1716,8 +1738,8 @@ already walks Image Trace. Short agent entry points:
   a locked artboard, or in isolation mode outside the isolated art.
   The Live Paint Bucket's options (`tool.setOption {tool: "livePaintBucket", values}`; double-clicking the tool opens
   them, dialog `livePaintBucketOptions`) are `paintFills` (on), `paintStrokes` (off), `highlight` (on), `color` (the
-  highlight color, `#rrggbb` or a layer color's name; `#ff2a2a`) and `width` (the highlight's width, 1 to 20 screen
-  pixels; 4). With `paintFills` alone on, a click runs `livePaint.fill` and Shift-click runs `livePaint.strokeEdge`.
+  highlight color, `#rrggbb` or a layer color's name; `#ff2a2a`) and `width` (the face highlight's width, 1 to 20 screen
+  pixels; 4; an edge's highlight is half as wide). With `paintFills` alone on, a click runs `livePaint.fill` and Shift-click runs `livePaint.strokeEdge`.
   With `paintStrokes` alone on, a click runs `livePaint.strokeEdge` on the edge within 4 screen pixels of the pointer,
   or nothing when none is in reach, and Shift-click runs `livePaint.fill`. With both on, a click runs
   `livePaint.strokeEdge` when an edge is within 4 screen pixels of the pointer and `livePaint.fill` otherwise, and
@@ -1738,6 +1760,11 @@ Brushes panel's New Brush button, its menu's New Brush… and art dropped on the
 Brush Options for the new brush; for a scatter, art or pattern brush they preview the art from `brush.selectionArt`.
 Their OK runs `brush.new {type, name, params, ids?}`, and Cancel adds no brush.
 
+`variable.bind`, `variable.unbind`, `variable.delete`, `dataset.set`, `dataset.update`, `dataset.delete`,
+`dataset.select`, `dataset.next` and `dataset.prev` add no undo step when they leave the document as it was, such as
+binding art to a variable it already has or applying the active data set again: the steps to redo stay, and a saved
+document stays unmodified.
+
 `dataset.select`, `dataset.next` and `dataset.prev` reply `{name, applied, skipped}`. They add `overflow: [id…]`
 when area type or type on a path whose text they rewrote doesn't fit, as `text.setText` does (see
 [Fitting area type](#fitting-area-type-auto-size-shrink-text-to-fit-overflow)). They skip an object that is
@@ -1746,6 +1773,13 @@ a hidden layer or group, which stay hidden unless one of the data set's visibili
 layer is shown again, its type holds the data set's text. They apply the values in the order the variables are
 defined. Of two variables of the same kind on one object, the one defined last wins. `dataset.list`,
 `dataset.capture` and `dataset.update` read hidden objects and objects inside a hidden layer or group as well.
+
+A text value bound to any frame of threaded text replaces the whole story, and the text flows through the frames
+again; `overflow` names the story's last frame when the text does not fit. `dataset.capture`, `dataset.update` and
+`dataset.list` read such a frame as the whole story, every frame's text joined in thread order. When any frame of
+the story is locked or inside a locked layer or group, the text value is skipped and counted in `skipped`, and the
+story is not read. Two text variables
+bound in one story apply in the order they are defined, and the one defined last wins.
 
 ```json
 {"name":"run_command","arguments":{"command":"symbol.list","params":{}}}
@@ -1764,11 +1798,15 @@ new variables without binding them, `dataset.select`, `dataset.next` and `datase
 has a value for". A data set with a value for a bound variable gives no warning even when every object bound to it is
 locked; `skipped` counts those objects.
 
+A `dataset.import` error about a value says why it was refused: a visibility value other than true, false, 1, 0, yes
+or no, or a graph value longer than 262,144 bytes.
+
 `dataset.update {all?}` writes what the bound objects hold now into the active data set, for each variable that the
 data set holds. A variable whose objects report no value, because they are locked, inside a locked layer or group,
 or deleted, keeps the data set's value. With `all: true` it also adds every other variable that the
 objects report a value for. The reply gives `values`, the number of values it wrote, and `left`, the variables it
-did not write.
+did not write. When every bound object is locked, it writes no value and adds no undo step, and `dataset.capture`
+returns the error "no bound object reports a value (locked objects and embedded images report none)".
 
 ## Graphic styles
 
@@ -1922,19 +1960,22 @@ the objects `select.all` takes, which leaves out hidden and locked art, and the 
 and locked objects inside a group are left out too, also in isolation mode.
 `recolor.reduce {colors?, method?, preserve?, limitTo?, ids?}` groups those colours into rows of similar colours (k-means in Lab, weighted by use;
 tints of a global swatch share its row; White and Black are preserved by default) and returns a map of rows
-`[{from: [keys], to: key}]` to edit and pass to `recolor.apply {map, method?, model?, limitTo?, group?, groupColors?, rename?}`.
+`[{from: [keys], to: key}]` to edit and pass to `recolor.apply {map, method?, model?, limitTo?, group?, groupColors?, rename?, globalAdjust?}`.
 For scripts and MCP, `model` selects the replacement color model: `keep` (default) retains each
 original color's model, `new` takes the replacement's model, and `document` converts replacements
-and edited color groups to the document's model. Invalid values fail before editing. This parameter
-is not a control in the Recolor Artwork dialog. A returned `note` reports a model conversion in
-`keep` mode.
+and edited color groups to the document's model. A row's own `model` (the same values) takes the
+place of the command's for that row's colors. Invalid values fail before editing. The Recolor
+Artwork dialog gives a row `model: "new"` when its color sliders edit the row's new color in a color
+mode. A returned `note` reports a model conversion in `keep` mode.
 
 `method` says how a row's colours take its new colour: `exact`, `preserveTints` (tints of the row's darkest colour
 stay tints), `scaleTints` (every colour becomes a tint as light, relative to the darkest), `tintsShades` (lighter and
 darker than the row's average become tints and shades) or `hueShift` (the most saturated colour takes the new colour,
 the others turn by the same hue). `limitTo` snaps new colours to a swatch library's nearest colour;
 `recolor.randomize {map, order?, saturationBrightness?, seed?}` shuffles or varies new colours; a row with
-`exclude: true` keeps its colours. `swatch.editGroup {group, colors, rename?}` rewrites a colour group in one undo
+`exclude: true` keeps its colours. With `limitTo`, a row's `tint` (a percentage, default 100) gives the art
+linked to the global or spot swatch its new color is that share of its tint; `tint` must be a number. `recolor.randomize`
+moves a row's `tint` with its new color and removes it from a color it changes, and moves a row's `model` with its new color. `swatch.editGroup {group, colors, rename?}` rewrites a colour group in one undo
 step (art linked to its global swatches follows), and `recolor.apply` with `group` recolours the art and rewrites the
 group together. Art linked to one of the group's global swatches stays linked when the swatch is rewritten with its
 row's new color (the default without `groupColors` when the rows follow the group's order), so a later `swatch.edit` still
@@ -1943,12 +1984,27 @@ is linked to a swatch rewritten with another color keeps its row's new color, ev
 linked to the swatch, as does art whose color the row converts into the art's own color model. Without `group`,
 the swatch keeps its color and the recolored art is no longer linked to it.
 
+`globalAdjust: {saturation?, brightness?, temperature?, luminosity?}` is the dialog's Global Adjust: each amount is a
+percentage from -100 to 100 (0 when left out), and all four at 0 change nothing. Every color that a row which is not
+excluded recolors takes the same change after its row's new color, in this order: saturation multiplies HSB
+saturation by 1 + saturation/100; brightness moves HSB brightness that share of the way to full brightness (above 0)
+or to black (below 0); temperature adds 0.2 × temperature/100 to red and subtracts it from blue; luminosity moves Lab
+lightness that share of the way to 100 or to 0 and keeps Lab a and b, so the hue stays. Each color keeps its own
+model, and a changed color is no longer linked to its swatch. The colors a `group` is rewritten with take the same
+change. With `limitTo`, each row's new color takes the change before it snaps to the library, so the art still takes
+the library's colors. Colors that no row holds, such as preserved White and Black, and excluded rows stay as they are.
+
+```json
+{"name":"run_command","arguments":{"command":"recolor.apply","params":{"map":{"#ff0000":"#ff0000","#0000ff":"#0000ff"},"globalAdjust":{"saturation":-40,"temperature":25}}}}
+```
+
 The `recolor.*` commands refuse parameters of the wrong form. A `limitTo` or `method` that is not a string gets the
 error for an unknown library or method. Other wrong-form parameters get an error that names them.
 `includeImages`, `includePatterns`, a row's `exclude`, `order`, `saturationBrightness` and the `white`, `black` and
 `grays` switches of `preserve` must be true or false; `colors` and `seed` must be whole numbers; `group` and `rename`
-must be strings, `groupColors` must be an array and `preserve` must be an object. Each refusal leaves the document unchanged and records no undo step. A `null`
-counts as a value left out except for `recolor.apply`'s `model`, which must be a string when given.
+must be strings, `groupColors` must be an array, `preserve` must be an object, and `globalAdjust` must be an object
+whose amounts are numbers from -100 to 100. Each refusal leaves the document unchanged and records no undo step. A `null`
+counts as a value left out except for `recolor.apply`'s `model` and a `map` row's `model`, which must be strings when given.
 
 ```json
 {"name":"run_command","arguments":{"command":"recolor.reduce","params":{"colors":2,"preserve":{"grays":true}}}}
@@ -1998,7 +2054,10 @@ in the `swatch.list` shape (`library` is an id or a name). `swatch.library.add {
 into the document as one undo step: a colour group's name brings the whole group, a swatch's name the swatch alone,
 no names the whole library; swatches the document already has (same name and paint) are reported under `existing`
 and not added again. `apply: "fill"|"stroke"` also applies the first one, in the same undo step (what clicking a
-swatch in the library panel does). `swatch.resetDefaults {replace?}` brings back the missing default swatches.
+swatch in the library panel does). The pattern library Geometric Patterns (`geometric-patterns`, category
+`patterns`) holds pattern swatches drawn in code; adding one also adds its pattern, as pasting art painted with it does
+(the same pattern the document has is reused, and a name another pattern or swatch has gets a number).
+`swatch.resetDefaults {replace?}` brings back the missing default swatches.
 
 ```json
 {"name":"run_command","arguments":{"command":"swatch.library.get","params":{"library":"earth-tones"}}}
@@ -2386,8 +2445,8 @@ and `layerRows`, the rows highlighted in the panel.
   Preview All Layers when the others are in Outline already), `layer.lockOthers` / `layer.unlockAll` (Alt-clicking an eye or a lock
   runs Hide or Lock Others for the row's layer, or Show or Unlock All when the others already are), `layer.pasteRemembersLayers`,
   `object.isolate {id?}` (a group, a layer or a single object, by default the first selected object; not type, not a
-  hidden or locked object or one in a hidden or locked group or layer, and not a guide path while Lock Guides is on) /
-  `object.exitIsolation`.
+  hidden or locked object or one in a hidden or locked group or layer, not a guide path while Lock Guides is on, and
+  while a symbol is edited only the editing layer or art on it) / `object.exitIsolation`.
 - **Dialogs and panel state** (control channel and the app's MCP): `ui.layerOptions {ids?}` and `ui.newLayer
   {sublayer?}` open Layer Options (dialog `layerOptions`: name, color, template, locked, visible, printable, preview,
   dimImages, dimPercent; OK is one undo step; Cmd/Ctrl+Alt+L runs `ui.newLayer` for a new layer), `ui.layersPanelOptions` opens Panel Options (`layersPanelOptions`:
@@ -3869,8 +3928,11 @@ are left out, and `warnings` names each kind of content left out or changed once
 tracked changes, tables, and the other stories the document has); a field with no result is left out with its own
 warning. Documents saved by Word 6.0 or Word 95, encrypted or password-protected documents and documents last saved with
 fast save are refused, and so are a stream larger than 64 MiB, a document with more than 4 MiB of text, 100,000 pieces,
-16,384 pages of properties or 100,000 paragraphs or runs, one whose 16-bit text holds half of a surrogate pair, and one
-whose structures lie outside their streams.
+16,384 pages of properties, 100,000 runs of character or of paragraph properties, 16 MiB of properties in its styles
+and property runs, or 100,000 paragraphs (hidden and deleted ones and those in field instructions counted) or runs of
+placed type, one whose 16-bit text holds half of a surrogate pair, one whose structures lie outside their streams, one whose property pages are out of order, listed twice or overlap, one whose
+style sheet counts 4,094 styles or more or holds fewer styles than it counts, and one whose styles are based on each
+other in a loop.
 `file.place` answers `format: "doc"`.
 
 ## PDF presets
@@ -4042,8 +4104,8 @@ groups and in other repeats included, with its type `radial`, `grid` or `mirror`
 and a grid's `rows` and `cols`; with `selectionOnly`, the Repeat objects in the selection)
 and `pathLength` (pt: the total length of the paths, compound paths' pieces included and guides left
 out, which objects lists as Path Length in the document's units, say for a cut line or an LED strip along the letters);
-`format: "text"` returns the plain-text report Document Info › Save… (`docInfo.save {path?}`) and the package report
-write.
+`format: "text"` returns the plain-text report Document Info › Save… (`docInfo.save {path?, selectionOnly?, category?}`:
+only `category` when given, else every category) and the package report write.
 
 ```json
 {"name":"run_command","arguments":{"command":"file.package","params":{"folder":"/tmp/handoff","copyFonts":false}}}
@@ -5025,8 +5087,8 @@ the paragraph's text now starts; when the text before `at` starts no list, nothi
 (the selected type) accept `kerning: "auto" | "optical" | number` (1/1000 em). Auto uses the font's
 pair metrics; Optical spaces horizontal pairs from their glyph shapes. Vertical text uses font
 metrics in either mode. A number sets a manual pair value,
-replacing that pair's automatic correction while tracking remains additive. Choosing Optical keeps
-existing manual pair values; choosing `"auto"` clears them. New text and files without an Optical setting use Auto. The Character
+replacing that pair's automatic correction while tracking remains additive. Choosing `"optical"` or
+`"auto"` clears existing manual pair values in the text it applies to. New text and files without an Optical setting use Auto. The Character
 panel offers both automatic modes.
 
 ## Small Caps, Superscript and Subscript
@@ -5254,16 +5316,22 @@ Character Style Options uses `charStyle.edit {name, to, attrs}` to replace the n
 attribute map in one undo step. `to` is trimmed and must be unique. The command updates text using the style
 while preserving local overrides; Undo/Redo restores the definition and its users. The `charStyleOptions`
 dialog exposes `name`, `font_family`, `font_style`, `size`, `leading`, `kerning`, `tracking`, `case`,
-`position`, `underline`, `strikethrough`, `charAlign`, `section`, and `preview`. An empty field leaves its
+`position`, `underline`, `strikethrough`, `charAlign`, `h_scale`, `v_scale`, `baseline_shift`, `rotation`,
+`language`, `section` (`general`, `basic` or `advanced`), and `preview`. An empty field leaves its
 attribute unset. `leading` and `kerning` also accept `Auto` to store an explicit automatic value.
+Advanced Character Formats holds `h_scale` and `v_scale` (percent, above 0 and at most 4000000),
+`baseline_shift` (points, -4000000 to 4000000), `rotation` (degrees, stored from -180 to 180) and `language` (a name or tag from Document
+Setup's languages; English: USA stores the explicit default `null`, and a tag not in the list that the style
+already has is kept). Language sets the language the characters are shaped in; it does not change hyphenation
+or spelling.
 The New Character Style dialog accepts the same character fields and starts with the selected text's
 captured attributes. Without selected text, it starts with the character defaults for the interface language
 (including `charAlign: "emBoxCenter"` in Japanese); changing a Basic field keeps other seeded attributes.
 Without selected text, the New Paragraph Style dialog sends no `attrs`, and the engine gives the new style the
 paragraph defaults for the interface language. Reset Panel in Basic Character
-Formats removes those fields from the definition.
-`ui.charStyleOptions.resetPanel {}` performs that reset when Basic Character Formats is selected in
-either character-style dialog; it is disabled on General.
+Formats removes those fields from the definition, and Reset Panel in Advanced Character Formats removes its five.
+`ui.charStyleOptions.resetPanel {}` performs that reset for the section selected in either character-style
+dialog; it is disabled on General.
 
 In the native file a text object's `para` holds the first paragraph's attributes and `paras` (left out when every
 paragraph is alike) one entry per paragraph, so older readers keep the first paragraph's. SVG export anchors each
@@ -5805,6 +5873,13 @@ use; groups attached before keep their Pivot and Rotate. Reset (or Cancel while 
 `ui.dialogReset`) puts the center and 0 back and keeps the dialog open. The options last across tool switches and are
 saved with the preferences.
 
+With one Objects on Path group selected, the Selection and Objects on Path tools show the Rotate All widget, a round
+handle beyond the top of the group's first object joined by a line to its attachment point. Dragging it turns every
+object about its attachment point by the angle the pointer turns about the first object's attachment point,
+counter-clockwise on the page: the drag previews `object.objectsOnPath.options {ids: [group], rotate}` with the
+group's Rotate plus that angle and keeps it as one undo step on release. Shift turns in steps of 15°, and Escape
+cancels the drag.
+
 ```json
 {"name":"run_command","arguments":{"command":"tool.setOption","params":{"tool":"objectsOnPath","values":{"pivot":7,"rotate":30}}}}
 {"name":"run_command","arguments":{"command":"object.objectsOnPath.attach","params":{"path":30,"ids":[12,15,18]}}}
@@ -5910,8 +5985,9 @@ Plug-ins › Artwork Cleanup and in its panel (`window.panel {panel: "artworkCle
 `addon.cleanup.simplify {tolerance?, protectCorners?, ids?}` removes the anchors each selected path can do without and
 refits the handles beside each one, so the outline keeps its shape. `tolerance` runs from 1 to 100 (20 by default); the
 outline stays within tolerance × 0.02 pt of where it was, measured against the original outline, so removals don't add
-up. With `protectCorners`, anchors where the path turns by more than 30° stay. Open ends always stay. It reports the
-anchor counts `before` and `after`, as one undo step.
+up. With `protectCorners`, anchors where the path turns by more than 30° stay. Open ends always stay. Locked and hidden
+paths, and paths in locked or hidden groups, are left out. It reports the anchor counts `before` and `after`, as one
+undo step.
 
 The health check looks for issues in the selection, or in the whole document while nothing is selected (`scope:
 "selection"|"document"` picks one). Locked and hidden objects, and the insides of live or generated art (blends,
@@ -5926,12 +6002,12 @@ envelopes, graphs, symbols), are left out.
 
 | Kind | Finds | Fix |
 |---|---|---|
-| `emptyText` | Text with no characters, or only spaces | Removes it |
+| `emptyText` | Text with no characters, or only spaces (not clipping paths) | Removes it |
 | `strayPoints` | Paths of one anchor (not clipping paths) | Removes them |
 | `unpainted` | Paths and compound paths with no fill and no stroke | Removes them |
 | `zeroOpacity` | Objects at 0 % opacity | Removes them |
 | `duplicateObjects` | A path stacked directly on an identical one (geometry, paint, opacity), or type stacked directly on the same type (text, styles, paint) within 1 pt of it | Removes the upper one |
-| `offArtboard` | Top-level objects that touch no artboard | Removes them |
+| `offArtboard` | Top-level objects that touch no artboard (not clipping paths) | Removes them |
 | `duplicateAnchors` | Neighbouring anchors within 0.01 pt | Merges them |
 | `tinyHandles` | Handles shorter than 0.01 pt | Retracts them |
 | `collinearAnchors` | Corner anchors on a straight run (turning by a sine of 0.005 or less) | Removes them |
@@ -5945,7 +6021,8 @@ envelopes, graphs, symbols), are left out.
 
 `addon.cleanup.deepUngroup {includeClipGroups?, ids?}` takes apart every level of grouping in the selection. Clipping
 groups stay whole unless `includeClipGroups` is true; their clipping paths then become plain paths. Objects keep the
-opacity of the groups they were in.
+opacity of the groups they were in. Locked and hidden groups stay whole, and locked and hidden objects stay locked or
+hidden and are left out of the selection.
 
 `addon.cleanup.rejoin {gap?, ids?}` welds the selected open paths whose ends lie within `gap` (0 to 6 pt, 0.1 by
 default) back into paths. Each end joins one other end: where several are in reach, the one the path turns least to go

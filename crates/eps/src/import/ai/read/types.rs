@@ -25,7 +25,7 @@ pub(super) const MAX_PIXELS: u64 = 1 << 25;
 pub(super) const MAX_PLACED_ELSEWHERE: usize = 4096;
 
 /// The note for an image past [`MAX_PIXELS`]: the file then opens from its PDF part, which reads
-/// larger images (#1479).
+/// larger images (#1479), unless that part can't be read either; then the image is left out.
 pub const IMAGE_TOO_LARGE: &str = "an image too large to read from the editing data was left out";
 
 /// Most hex digits of an image's samples read from comment lines (CMYK and alpha at the largest size).
@@ -39,6 +39,9 @@ pub(crate) const FLIP: Affine = Affine::new([1.0, 0.0, 0.0, -1.0, 0.0, 0.0]);
 
 /// Most patterns read (others can't fill art).
 pub(super) const MAX_PATTERNS: usize = 4096;
+
+/// Most characters of a path's note read (the version 7 specification allows 254, §5.3.1).
+pub(super) const MAX_NOTE: usize = 1024;
 
 #[derive(Clone, Debug)]
 pub(crate) struct GState {
@@ -59,6 +62,11 @@ pub(crate) struct GState {
     pub(crate) overprint_stroke: bool,
     pub(super) locked: bool,
     pub(super) hidden: bool,
+    /// The note (`%AI3_Note:`) the paths that follow get, until another replaces it (`None`: no
+    /// note comment yet; empty: none).
+    pub(super) note: Option<String>,
+    /// Show Center (`1 Ap`) for the paths that follow (`None`: the path's default).
+    pub(super) show_center: Option<bool>,
 }
 
 impl Default for GState {
@@ -82,6 +90,8 @@ impl Default for GState {
             overprint_stroke: false,
             locked: false,
             hidden: false,
+            note: None,
+            show_center: None,
         }
     }
 }
@@ -132,6 +142,9 @@ pub(super) struct LayerAttrs {
 pub(super) enum Kind {
     Layer(Box<LayerAttrs>),
     Group,
+    /// Wraparound text (`*w` … `*W`, version 7 specification §15.4.2): a group whose objects other
+    /// than its type are wrap objects.
+    Wrap,
     Compound,
     Clip,
     Mask,
@@ -222,7 +235,6 @@ pub(super) const LINKED_PREVIEWS: &str =
 pub(super) const IGNORED: &[&str] = &[
     "Ae",
     "AE",
-    "Ap",
     "As",
     "Xd",
     "Xr",
@@ -289,3 +301,28 @@ pub const NON_NATIVE_ART_UNREAD: &str = "non-native art (a placed PDF's content)
 
 /// The name of the group a `/ForeignObject`'s art comes in as.
 pub const NON_NATIVE_ART: &str = "Non-native art";
+
+/// The note for a file with a graph (`%_Gs` … `%_GS`): its drawn art comes in, its data and
+/// settings don't.
+pub const GRAPH_PLAIN: &str = "graphs come in as plain art, without their data or settings";
+
+/// The note for a graph that starts inside another or doesn't end before its layer does: the art
+/// read so far is kept, and what follows the layer is read as usual.
+pub const GRAPH_UNENDED: &str = "a graph's records don't end where they should: its art was read as it is";
+
+/// A graph's records (the version 7 specification's chapter 17 and appendix A): two-letter
+/// operators starting with `G`, read and left out with their operands.
+pub(super) const GRAPH_OPS: &[&str] = &[
+    "G1", "G+", "Ga", "GA", "Gb", "Gc", "GC", "Gd", "GD", "Ge", "Gf", "Gg", "Gi", "Gj", "Gl", "Gm", "Go", "Gp", "Gr", "Gs", "GS", "Gt", "GT", "Gv",
+    "Gw", "GX", "Gx", "Gy", "Gz",
+];
+
+/// A graph being read (`%_Gs` … `%_GS`).
+#[derive(Debug)]
+pub(super) struct Graph {
+    /// Between `Gt` and `GT`, where the graph's settings may use paint and type operators on `%_`
+    /// lines too.
+    pub(super) settings: bool,
+    /// How many frames were open at its `Gs`: a layer that ends with fewer ends the graph.
+    pub(super) frames: usize,
+}

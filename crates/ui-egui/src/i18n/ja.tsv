@@ -1333,6 +1333,7 @@ digits	Malayalam	マラヤーラム数字
 	Delete Workspace	ワークスペースを削除
 	Delete the graphic style “{name}”?	グラフィックスタイル「{name}」を削除しますか？
 	Delete Action Sets	アクションセットを削除
+	Duplicate Action or Action Set	アクションまたはアクションセットを複製
 	Delete the action set “{name}” and its actions?	アクションセット「{name}」とそのアクションを削除しますか？
 	Delete the selected action sets and their actions?	選択したアクションセットとそのアクションを削除しますか？
 	Delete theme	テーマを削除
@@ -1662,6 +1663,7 @@ digits	Malayalam	マラヤーラム数字
 	Get Preferences	環境設定を取得
 	Get Text Range	テキスト範囲を取得
 	Global	グローバル
+	Global Adjust	グローバル調整
 	Global Brush Dimensions	ブラシサイズ (共通)
 	Global Process Color	グローバルプロセスカラー
 	Go To Link	リンク元へ移動
@@ -3383,7 +3385,6 @@ gradient-kind	Radial	円形
 	Align center	中央揃え
 	Align left	左揃え
 	Align right	右揃え
-	All colours are within the CMYK gamut	すべてのカラーが CMYK の色域内です
 	Alt	Alt
 	Amount	量
 	Area Type Options	エリア内文字オプション
@@ -3425,7 +3426,6 @@ gradient-kind	Radial	円形
 	Compression › Color › Above Ppi	圧縮 › カラー › 解像度が次の値を超える場合
 	Contrast	コントラスト
 	Convert To Outlines	アウトラインに変換
-	Copied the CSS of {rules} object(s)	{rules} 個のオブジェクトの CSS をコピーしました
 	Copy All Objects	すべてのオブジェクトをコピー
 	Copy Fonts Used in the Document	ドキュメントで使用しているフォントをコピー
 	Copy Links	リンクをコピー
@@ -3445,14 +3445,12 @@ gradient-kind	Radial	円形
 	Default Printer	デフォルトのプリンター
 	Delete these {n} graphic styles?	これら {n} 個のグラフィックスタイルを削除しますか？
 	Delete this {n} graphic style?	この {n} 個のグラフィックスタイルを削除しますか？
-	Discarded {} recovered document(s)	復元したドキュメント {} 個を破棄しました
 	Discord	Discord
 	Do Not Move	移動しない
 	Document Swatches	ドキュメントのスウォッチ
 	Document profile	ドキュメントプロファイル
 	Download	ダウンロード
 	Downloaded {what}	{what} をダウンロードしました
-	Downloaded {} file(s)	{} 個のファイルをダウンロードしました
 	Draw Behind	背面描画
 	Draw Inside	内側描画
 	Draw Normal	標準描画
@@ -3460,15 +3458,11 @@ gradient-kind	Radial	円形
 	Duplicate and Offset 10 pt	複製して 10 pt ずらす
 	Edit Toolbar	ツールバーを編集
 	Edit Views	表示を編集
-	Embedded {n} image(s)	{n} 個の画像を埋め込みました
-	Embedded {n} image(s); {missing} missing: relink them first	{n} 個の画像を埋め込みました。{missing} 個が見つかりません：先に再リンクしてください
 	English	English
 	Entire Font	フォント全体
 	Export Asset	アセットを書き出し
-	Exported {count} file(s) to {folder}	{folder} に {count} 個のファイルを書き出しました
 	Exported {path}	{path} を書き出しました
 	Exported {what}	{what} を書き出しました
-	Exported {what} with {} note(s): {first}	{what} を書き出しました (注意 {} 件：{first})
 	Exporting {}	{} を書き出し中
 	File Dimensions	ファイルの寸法
 	Fill (X), double-click for the Color Picker	塗り (X)、ダブルクリックでカラーピッカー
@@ -3608,7 +3602,6 @@ file-filter	Templates	テンプレート
 	None (/)	なし (/)
 	None (keep transparency)	なし (透明を保持)
 	Offset X	X 軸オフセット
-	Opened with {} note(s): {}	開きました (注意 {} 件)：{}
 	Other Libraries	その他のライブラリ
 	Out of Gamut Warning	色域外警告
 	Out of Web Color Warning	Web カラー外警告
@@ -3617,7 +3610,6 @@ file-filter	Templates	テンプレート
 	Output White	出力ホワイト
 	Output › Mode	出力 › モード
 @plural	Packaged {n} file {note} in {folder}|Packaged {n} files {note} in {folder}	{folder} に {n} 個のファイルをパッケージしました{note}
-	Packaged {n} file(s){note}	{n} 個のファイルをパッケージしました{note}
 	Page information	ページ情報
 	Paragraph Style	段落スタイル
 	Part of ArtCraft. MIT OR Apache-2.0. Fonts: Source Sans 3, Inter, JetBrains Mono (OFL). Icons: Lucide (ISC) + VectorCraft.	ArtCraft の一員。MIT OR Apache-2.0。フォント：Source Sans 3、Inter、JetBrains Mono (OFL)。アイコン：Lucide (ISC) + VectorCraft。
@@ -3631,6 +3623,10 @@ file-filter	Templates	テンプレート
 	Preview in Browser needs the desktop app (the web downloads files instead)	ブラウザーでプレビューにはデスクトップアプリが必要です (Web アプリではファイルがダウンロードされます)
 	Print presets	プリントプリセット
 	Proportional Lining	プロポーショナルライニング
+	Position:	位置:
+	Default Position	デフォルトの位置
+	Numerator	分子
+	Denominator	分母
 	Proportional Oldstyle	プロポーショナルオールドスタイル
 	Punctuation	句読点
 	Radius 1	半径 1
@@ -3646,15 +3642,11 @@ file-filter	Templates	テンプレート
 	Registration marks	見当トンボ
 	Regular	標準
 	Relink Linked Files to the Document	リンクファイルをドキュメントに再リンク
-	Relinked {n} image(s)	{n} 個の画像を再リンクしました
-	Relinked {n} image(s); not in that folder: {}	{n} 個の画像を再リンクしました。そのフォルダーに無いもの：{}
-	Relinked {} image(s)	{} 個の画像を再リンクしました
 	Repeat Objects	リピートオブジェクト
 	Repeat Options	リピートオプション
 	Reset with Mesh	メッシュでリセット
 	Reset with Warp	ワープでリセット
 	Reset {}	{}をリセット
-	Restored {} recovered document(s): save them to keep them	復元したドキュメント {} 個を開きました：残すには保存してください
 	Right	右
 	Right in Front	右が前面
 	Right-Justified Tab	右揃えタブ
@@ -3665,7 +3657,6 @@ file-filter	Templates	テンプレート
 	Saved to User Defined: {}	ユーザー定義に保存しました：{}
 	Saved {n} files beside {path}	{path} の隣に {n} 個のファイルを保存しました
 	Saved {path}	{path} を保存しました
-	Saved {path} with {} note(s): {first}	{path} を保存しました (注意 {} 件：{first})
 	Saving	保存中
 	Saving recovery data for {}	{} の復帰用データを保存中
 	Saving {}	{} を保存中
@@ -3736,7 +3727,6 @@ file-filter	Templates	テンプレート
 	Unique	一意
 	Unite and Simplify	合体して単純化
 	Untitled	名称未設定
-	Updated {} image(s)	{} 個の画像を更新しました
 	Use the document's swatch: pasted colors take its color.	ドキュメントのスウォッチを使用: ペーストしたカラーはそのカラーになります。
 	User Library	ユーザーライブラリ
 	User Preset	ユーザープリセット
@@ -4076,7 +4066,12 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	Make Guides: select paths	ガイドを作成: パスを選択してください
 @msg	Release Guides: no guides	ガイドを解除: ガイドがありません
 @msg	variables are locked	変数がロックされています
+@msg	more than {MAX_CSV_ROWS} data sets: Import Data Sets reads at most {MAX_CSV_ROWS}	データセットが {MAX_CSV_ROWS} 個を超えています: 「データセットを読み込み」が読み込めるのは {MAX_CSV_ROWS} 個までです
+@msg	more than {MAX_CSV_COLS} variables: Import Data Sets reads at most {MAX_CSV_COLS}	変数が {MAX_CSV_COLS} 個を超えています: 「データセットを読み込み」が読み込めるのは {MAX_CSV_COLS} 個までです
 @msg	variables that aren't text were left out: {kinds}	テキスト以外の変数は除外されました: {kinds}
+@msg	a new document won't read these variables back with their kind: {names}	新しいドキュメントでは、これらの変数は元の種類で読み込まれません: {names}
+@msg	a new document refuses this file because of these variables: {names}	新しいドキュメントは、これらの変数のためにこのファイルを拒否します: {names}
+@msg	the header `{header}` for `{name}` would read back as the variable `{other}`: rename one of them	`{name}` の見出し `{header}` は変数 `{other}` として読み込まれます: どちらかの名前を変更してください
 @msg	guides are locked	ガイドがロックされています
 @msg	handle must be in or out	handle には in または out を指定してください
 @msg	no saved selection recalled	保存した選択範囲を呼び出していません
@@ -4111,6 +4106,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	the document has no artboard	ドキュメントにアートボードがありません
 @msg	this format holds one artboard: export several as PDF or with document.exportForScreens	この形式で書き出せるアートボードは 1 つだけです: 複数のアートボードは PDF として書き出すか、document.exportForScreens を使用してください
 @msg	this file was saved without PDF compatibility, and its editing data can't be read ({why})	このファイルは PDF 互換性なしで保存されており、編集データを読み込めません ({why})
+@msg	the PDF part couldn't be read ({_1}): the file opened from its editing data	PDF 部分を読み込めませんでした ({_1})。編集データからファイルを開きました
 @msg	the export wrote no file	書き出しでファイルが作成されませんでした
 @msg	{_1} files can be opened but not written (see document.formats)	{_1} ファイルは開けますが、保存や書き出しはできません (document.formats を参照してください)
 @msg	{_1} files are written by file.saveAsTemplate	{_1} ファイルは file.saveAsTemplate で保存します
@@ -4149,6 +4145,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	`groupColors` must be an array	`groupColors` には配列を指定してください
 @msg	`mode` applies to freeform gradients	`mode` はフリーフォームグラデーションにのみ適用されます
 @msg	`preserve` must be an object	`preserve` にはオブジェクトを指定してください
+@msg	`globalAdjust` must be an object	`globalAdjust` にはオブジェクトを指定してください
 @msg	`stops` must be an array	`stops` には配列を指定してください
 @msg	`{k}` must be [x, y]	`{k}` は [x, y] の形式で指定してください
 @msg	a gradient needs at least two stops	グラデーションには 2 つ以上の分岐点が必要です
@@ -4283,6 +4280,8 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	node {_1} is not text	ノード {_1} はテキストではありません
 @msg	Text Wrap: select a wrap object	テキストの回り込み: 回り込みオブジェクトを選択してください
 @msg	layers can't be wrap objects	レイヤーは回り込みオブジェクトにできません
+@msg	line {line}: value for `{var}` must be true or false	{line} 行目: `{var}` の値には true または false を指定してください
+@msg	line {line}: value for `{var}` is longer than {MAX_GRAPH_CSV} bytes	{line} 行目: `{var}` の値が {MAX_GRAPH_CSV} バイトを超えています
 @msg	no threaded text selected	スレッドテキストが選択されていません
 @msg	Create Outlines: select text objects	アウトラインを作成: テキストオブジェクトを選択してください
 @msg	paste unavailable	貼り付けを使用できません
@@ -4313,8 +4312,16 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	unknown command `{0}`; did you mean `{1}`?	`{0}` は不明なコマンドです。`{1}` のことですか?
 @msg	`{what}` closes nothing	`{what}` に対応する開始部分がありません
 @msg	`{what}` closes something it didn't open	`{what}` が対応しない開始部分を閉じています
+@msg	a mask that covers several layers comes in as a clipping group in each layer it covers	複数のレイヤーにまたがるマスクは、覆う各レイヤーでクリップグループとして読み込まれます
+@msg	a graph's records don't end where they should: its art was read as it is	グラフのレコードが正しい位置で終わっていません: アートはそのまま読み込まれました
+@msg	`{w}` takes no operands	`{w}` はオペランドを取りません
+@msg	a wraparound group is inside a compound path	テキストの回り込みグループが複合パスの中にあります
 @msg	a path has too many points	ポイントが多すぎるパスがあります
 @msg	it ends inside a layer	レイヤーの途中で終わっています
+@msg	it ends inside a multi-layer mask	複数レイヤーにまたがるマスクの途中で終わっています
+@msg	a multi-layer mask's operators are out of order	複数レイヤーにまたがるマスクの演算子の順序が正しくありません
+@msg	a multi-layer mask needs one clipping path	複数レイヤーにまたがるマスクにはクリッピングパスが 1 つ必要です
+@msg	a group crosses a multi-layer mask	グループが複数レイヤーにまたがるマスクと交差しています
 @msg	it has art outside its layers	レイヤーの外にアートがあります
 @msg	it has more than {MAX_NODES} objects	オブジェクトが {MAX_NODES} 個を超えています
 @msg	it has no layers	レイヤーがありません
@@ -4323,6 +4330,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	its objects are nested too deeply	オブジェクトの入れ子が深すぎます
 @msg	its section ending with `%{end}` doesn't end	`%{end}` で終わるはずのセクションが終わっていません
 @msg	an image VectorCraft can't read was left out	VectorCraft で読み込めない画像は除外されました
+@msg	graphs come in as plain art, without their data or settings	グラフは通常のアートとして読み込まれ、データと設定は保持されません
 @msg	an image whose data is cut short was left out	データが途中で切れている画像は除外されました
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	リンク画像は、元のファイルが見つかるまで、ファイルに保存された低解像度のプレビューで表示されます：リンクパネルで再リンクしてください
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	表示に使われるフォントの 1 行に対して低すぎるフレーム内のエリア内文字は、フレームを高くしました ({_1}): そうしないと文字が表示されません
@@ -4491,7 +4499,6 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	`{tool}` isn't a Liquify tool	`{tool}` はゆがみツールではありません
 @msg	pick a colour, gradient or pattern to save as a swatch	スウォッチとして保存するカラー、グラデーション、またはパターンを選択してください
 @msgplural	Packaged {n} file ({note}) in {folder}|Packaged {n} files ({note}) in {folder}	{n} 個のファイルを {folder} にパッケージしました({note})
-@msg	Packaged {n} file(s){note}	{n} 個のファイルをパッケージしました{note}
 @msg	choose a location for the package	パッケージの保存場所を選択してください
 @msg	missing `folder`	`folder` が指定されていません
 @msg	the package came back damaged	返されたパッケージのデータが破損しています
@@ -4545,7 +4552,6 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	Downloaded {what}	{what} をダウンロードしました
 @msg	Imported {what}: {_1}	{what} を読み込みました: {_1}
 @msg	Installed plug-in {_1}	プラグイン {_1} をインストールしました
-@msg	Opened with {_1} note(s): {_2}	ドキュメントを開きました (注意 {_1} 件): {_2}
 @msg	Saved {path}	{path} を保存しました
 @msg	no app to open files here	この環境にはファイルを開くアプリがありません
 @msg	no data	データがありません
@@ -4556,7 +4562,6 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	the document has never been saved	ドキュメントはまだ一度も保存されていません
 @msg	the export returned unreadable data	書き出し処理から読み取れないデータが返されました
 @msg	{status} ({e})	{status} ({e})
-@msg	Saved {path} with {_1} note(s): {first}	{path} を保存しましたが、注意事項が {_1} 件あります: {first}
 @msg	Couldn't open {name}: {e}	{name} を開けませんでした: {e}
 @msg	Couldn't read {name}: {e}	{name} を読み込めませんでした: {e}
 @msg	Internal error: {msg} (please report this bug)	内部エラー: {msg} (このバグを報告してください)
@@ -4646,6 +4651,8 @@ swatch	Bright Violet	ビビッドバイオレット
 @msgplural	Copied the CSS of {n} object|Copied the CSS of {n} objects	{n} 個のオブジェクトの CSS をコピーしました
 @msgplural	Downloaded {n} file|Downloaded {n} files	{n} 個のファイルをダウンロードしました
 @msgplural	Exported {n} file to {folder}|Exported {n} files to {folder}	{n} 個のファイルを {folder} に書き出しました
+@msg	All colors are within the CMYK gamut	すべてのカラーが CMYK の色域内です
+@msgplural	{n} color is out of the CMYK gamut|{n} colors are out of the CMYK gamut	{n} 個のカラーが CMYK の色域外です
 @msg	Unembedded to {_1}	埋め込みを解除して {_1} に保存しました
 @msg	no swatch library `{l}` (see swatch.library.list)	スウォッチライブラリ `{l}` が見つかりません (swatch.library.list を参照)
 @msg	no user library folder here	この環境にはユーザーライブラリフォルダーがありません
@@ -4661,8 +4668,10 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	there are no printer settings to open here	この環境では開けるプリンター設定がありません
 @msg	Couldn't save recovery data: {e}	復帰用データを保存できませんでした: {e}
 @msg	Saved recovery data for {title}	{title} の復帰用データを保存しました
-@msg	Discarded {_1} recovered document(s)	復帰用データのドキュメントを {_1} 件破棄しました
-@msg	Restored {_1} recovered document(s): save them to keep them	復帰用データからドキュメントを {_1} 件復元しました: 残すには保存してください
+@msgplural	Discarded {n} recovered document|Discarded {n} recovered documents	復帰用データのドキュメントを {n} 件破棄しました
+@msgplural	Restored {n} recovered document: save it to keep it|Restored {n} recovered documents: save them to keep them	復帰用データからドキュメントを {n} 件復元しました: 残すには保存してください
+@msgplural	Opened with {n} note: {first}|Opened with {n} notes: {first}	ドキュメントを開きました (注意 {n} 件): {first}
+@msgplural	Saved {path} with {n} note: {first}|Saved {path} with {n} notes: {first}	{path} を保存しましたが、注意事項が {n} 件あります: {first}
 @msg	Saving recovery data for {_1}	{_1} の復帰用データを保存中
 @msg	This shortcut file is in a form VectorCraft can't read.	このショートカットファイルは VectorCraft で読み込めない形式です。
 @msg	bad shortcut	ショートカットが正しくありません
@@ -5126,8 +5135,10 @@ lighting	Light	ライト
 @msg	Batch: {count} processed, {failed} failed	バッチ: {count} 件を処理、{failed} 件が失敗しました
 @msg	choose a destination folder	出力先フォルダーを選択してください
 @msg	choose a source folder	ソースフォルダーを選択してください
+@msg	columns {first} and {column} both name the variable `{name}`	列 {first} と列 {column} が同じ変数 `{name}` を指定しています
 @msg	open a document with data sets	データセットのあるドキュメントを開いてください
 @msg	nothing in data set {name} was applied: no object is bound to a variable it has a value for	データセット {name} から何も適用されませんでした: 値のある変数にバインドされたオブジェクトがありません
+@msg	no bound object reports a value (locked objects and embedded images report none)	値を返すバインドされたオブジェクトがありません (ロックされたオブジェクトと埋め込み画像は値を返しません)
 @msg	the action has no steps	アクションにステップがありません
 
 # User Interface › Accent Color
@@ -5270,6 +5281,7 @@ lighting	Light	ライト
 	Ruby…	ルビ…
 	Ruby	ルビ
 	Geometric Guides	幾何ガイド
+	Geometric Patterns	幾何パターン
 	Ease In	イーズイン
 	Ease Out	イーズアウト
 	Ease In Out	イーズインアウト
@@ -5351,7 +5363,7 @@ axis	Y Axis	Y 軸
 	On Artboards	アートボード上
 	All Artboards	すべてのアートボード
 	Include Objects On Canvas	カンバス上のオブジェクトを含める
-	Result(s): {count}	結果: {count}
+@plural	Result: {n}|Results: {n}	結果: {n}
 @msg	select one object	オブジェクトを 1 つ選択してください
 @msg	Global Edit works on paths, compound paths, symbol instances and groups of them	グローバル編集はパス、複合パス、シンボルインスタンスとそれらのグループに使用できます
 @msg	no similar objects found (rotated or reflected copies are not matched); change the Global Edit Options and try again	類似するオブジェクトが見つかりません（回転または反転したコピーは一致しません）。グローバル編集オプションを変更してもう一度試してください
@@ -5609,6 +5621,11 @@ anchor	Points:	ポイント:
 	Case	大文字と小文字
 @msg	{label} must be a number	{label} には数値を指定してください
 @msg	{label} must be a number of at least 0.1	{label} には 0.1 以上の数値を指定してください
+	Advanced Character Formats	詳細文字形式
+	Horizontal Scale	水平比率
+	Vertical Scale	垂直比率
+@msg	{label} must be a number from {min} to {max}	{label} には {min} から {max} までの数値を指定してください
+@msg	{label} must be a number above 0 and at most {max}	{label} には 0 より大きく {max} 以下の数値を指定してください
 @msg	no character style `{name}`	文字スタイル `{name}` が見つかりません
 
 # Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).

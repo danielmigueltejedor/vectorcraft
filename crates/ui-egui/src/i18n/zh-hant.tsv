@@ -123,7 +123,6 @@
 	All Artwork Above	上方所有圖稿
 	All Caps	全部大寫
 	All Categories	所有類別
-	All colours are within the CMYK gamut	所有顏色皆在 CMYK 色域內
 	All on Active Artboard	作用中工作區域上的全部
 	All on Same Layers	相同圖層上的全部
 	All printer's marks	所有印表機標記
@@ -571,7 +570,6 @@ font-technology	Variable	可變
 	Convert to sRGB	轉換為 sRGB
 	Convert to Straight Lines	轉換為直線
 	Convert:	轉換：
-	Copied the CSS of {rules} object(s)	已複製 {rules} 個物件的 CSS
 	Copies:	份數：
 	Copy	複製
 	Copy (make a transformed copy)	複製 (製作變形後的拷貝)
@@ -724,6 +722,7 @@ font-technology	Variable	可變
 	Delete Tab	刪除定位點
 	Delete the graphic style “{name}”?	要刪除繪圖樣式「{name}」嗎？
 	Delete Action Sets	刪除動作組
+	Duplicate Action or Action Set	製作動作或動作組複本
 	Delete the action set “{name}” and its actions?	要刪除動作組「{name}」及其中的動作嗎？
 	Delete the selected action sets and their actions?	要刪除所選動作組及其中的動作嗎？
 	Delete Theme	刪除主題
@@ -759,7 +758,6 @@ font-technology	Variable	可變
 	Discard Empty Type	捨棄空白文字
 	Discard Recovered Documents	捨棄已復原的文件
 	Discard White Overprint in Output	輸出時捨棄白色疊印
-	Discarded {} recovered document(s)	已捨棄 {} 份復原的文件
 	Discord	Discord
 	Discretionary Hyphen	選擇性連字號
 	Discretionary Ligatures	任意連字
@@ -821,7 +819,6 @@ font-technology	Variable	可變
 	Download	下載
 	Download:	下載：
 	Downloaded {what}	已下載 {what}
-	Downloaded {} file(s)	已下載 {} 個檔案
 	Drag	拖曳
 	Drag a handle	拖曳控制把手
 	Drag art here, or select it and click +. Hold Alt for one asset of several objects.	將圖稿拖曳到這裡，或選取後按一下 +。按住 Alt 可將多個物件合為一個資產。
@@ -931,8 +928,6 @@ font-technology	Variable	可變
 	Embed page thumbnails	嵌入頁面縮圖
 	Embedded	已內嵌
 	Embedded Image	嵌入的影像
-	Embedded {n} image(s)	已嵌入 {n} 張影像
-	Embedded {n} image(s); {missing} missing: relink them first	已嵌入 {n} 張影像；{missing} 張遺失：請先重新連結
 	Emulsion:	藥膜：
 	En Dash	短破折號
 	En Space	半形空格
@@ -1052,10 +1047,8 @@ font-technology	Variable	可變
 	Export Transparency Flattener Presets	匯出透明度平面化預設集
 	Export {count} Selected	匯出 {count} 個選取項目
 	Export:	匯出：
-	Exported {count} file(s) to {folder}	已匯出 {count} 個檔案至 {folder}
 	Exported {path}	已匯出 {path}
 	Exported {what}	已匯出 {what}
-	Exported {what} with {} note(s): {first}	已匯出 {what}，附 {} 則附註：{first}
 	Exporting {}	正在匯出 {}
 	Export…	匯出…
 	Extrude & Bevel…	突出與斜角…
@@ -1262,6 +1255,7 @@ file-filter	Templates	範本
 	Get Preferences	取得偏好設定
 	Get Text Range	取得文字範圍
 	Global	全域
+	Global Adjust	整體調整
 	Global Brush Dimensions	整體筆刷尺寸
 	Global Process Color	整體印刷色
 	Global Process Color, CMYK	整體印刷色，CMYK
@@ -1767,6 +1761,7 @@ file-filter	Templates	範本
 @msg	the document has no artboard	文件沒有工作區域
 @msg	this format holds one artboard: export several as PDF or with document.exportForScreens	此格式只能容納一個工作區域：若要匯出多個，請匯出為 PDF 或使用 document.exportForScreens
 @msg	this file was saved without PDF compatibility, and its editing data can't be read ({why})	此檔案儲存時未啟用 PDF 相容性，且無法讀取其編輯資料 ({why})
+@msg	the PDF part couldn't be read ({_1}): the file opened from its editing data	無法讀取 PDF 部分 ({_1})：已從其編輯資料開啟檔案
 @msg	the export wrote no file	匯出未寫入任何檔案
 @msg	{_1} files can be opened but not written (see document.formats)	{_1} 檔案可以開啟，但無法寫入 (請參閱 document.formats)
 @msg	{_1} files are written by file.saveAsTemplate	{_1} 檔案由 file.saveAsTemplate 寫入
@@ -1801,6 +1796,7 @@ file-filter	Templates	範本
 @msg	`groupColors` must be an array	`groupColors` 必須是陣列
 @msg	`mode` applies to freeform gradients	`mode` 只適用於任意形狀漸層
 @msg	`preserve` must be an object	`preserve` 必須是物件
+@msg	`globalAdjust` must be an object	`globalAdjust` 必須是物件
 @msg	`stops` must be an array	`stops` 必須是陣列
 @msg	`{k}` must be [x, y]	`{k}` 必須是 [x, y]
 @msg	a gradient needs at least two stops	漸層至少需要兩個色標
@@ -1931,6 +1927,8 @@ file-filter	Templates	範本
 @msg	node {_1} is not text	節點 {_1} 不是文字
 @msg	Text Wrap: select a wrap object	文字繞圖：請選取繞圖物件
 @msg	layers can't be wrap objects	圖層不能作為繞圖物件
+@msg	line {line}: value for `{var}` must be true or false	第 {line} 行：`{var}` 的值必須是 true 或 false
+@msg	line {line}: value for `{var}` is longer than {MAX_GRAPH_CSV} bytes	第 {line} 行：`{var}` 的值超過 {MAX_GRAPH_CSV} 位元組
 @msg	no threaded text selected	未選取串連文字
 @msg	Create Outlines: select text objects	建立外框：請選取文字物件
 @msg	paste unavailable	無法貼上
@@ -1961,8 +1959,16 @@ file-filter	Templates	範本
 @msg	unknown command `{0}`; did you mean `{1}`?	未知的指令 `{0}`；您是指 `{1}` 嗎？
 @msg	`{what}` closes nothing	`{what}` 沒有可結束的內容
 @msg	`{what}` closes something it didn't open	`{what}` 結束了並非由它開始的內容
+@msg	a mask that covers several layers comes in as a clipping group in each layer it covers	覆蓋多個圖層的遮色片會在其覆蓋的每個圖層中作為剪裁群組匯入
+@msg	a graph's records don't end where they should: its art was read as it is	圖表的記錄沒有在應有的位置結束：其圖稿按原樣讀取
+@msg	`{w}` takes no operands	`{w}` 不接受運算元
+@msg	a wraparound group is inside a compound path	文字繞圖群組位於複合路徑內
 @msg	a path has too many points	有一條路徑的點過多
 @msg	it ends inside a layer	它在圖層內部結束
+@msg	it ends inside a multi-layer mask	它在跨圖層遮色片內部結束
+@msg	a multi-layer mask's operators are out of order	跨圖層遮色片的運算子順序錯誤
+@msg	a multi-layer mask needs one clipping path	跨圖層遮色片需要一條剪裁路徑
+@msg	a group crosses a multi-layer mask	群組跨越了跨圖層遮色片
 @msg	it has art outside its layers	它有位於圖層之外的圖稿
 @msg	it has more than {MAX_NODES} objects	它有超過 {MAX_NODES} 個物件
 @msg	it has no layers	它沒有圖層
@@ -1971,6 +1977,7 @@ file-filter	Templates	範本
 @msg	its objects are nested too deeply	其物件巢狀層級過深
 @msg	its section ending with `%{end}` doesn't end	其以 `%{end}` 結尾的區段沒有結束
 @msg	an image VectorCraft can't read was left out	已略過 VectorCraft 無法讀取的影像
+@msg	graphs come in as plain art, without their data or settings	圖表以一般圖稿匯入，不保留其資料與設定
 @msg	an image whose data is cut short was left out	已略過資料不完整的影像
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	檔案中未定義漸層「{name}」：已改用單色替代
 @msg	objects with several fills or strokes, effects or brushes came in as their drawn look ({_1}): their appearance isn't editable yet	具有多個填色或筆畫、效果或筆刷的物件已依其繪製外觀匯入 ({_1})：其外觀目前尚無法編輯
@@ -2134,7 +2141,6 @@ file-filter	Templates	範本
 @msg	`{tool}` isn't a Liquify tool	`{tool}` 不是液化工具
 @msg	pick a colour, gradient or pattern to save as a swatch	請挑選要儲存為色票的顏色、漸層或圖樣
 @msgplural	Packaged {n} file ({note}) in {folder}|Packaged {n} files ({note}) in {folder}	已將 {n} 個檔案封裝到 {folder}({note})
-@msg	Packaged {n} file(s){note}	已封裝 {n} 個檔案{note}
 @msg	choose a location for the package	請選擇封裝的位置
 @msg	missing `folder`	未提供 `folder`
 @msg	the package came back damaged	傳回的封裝檔案已損毀
@@ -2188,7 +2194,6 @@ file-filter	Templates	範本
 @msg	Downloaded {what}	已下載 {what}
 @msg	Imported {what}: {_1}	已匯入 {what}：{_1}
 @msg	Installed plug-in {_1}	已安裝增效模組 {_1}
-@msg	Opened with {_1} note(s): {_2}	已開啟，附有 {_1} 則註解：{_2}
 @msg	Saved {path}	已儲存 {path}
 @msg	no app to open files here	此處沒有可開啟檔案的應用程式
 @msg	no data	沒有資料
@@ -2199,7 +2204,6 @@ file-filter	Templates	範本
 @msg	the document has never been saved	文件從未儲存過
 @msg	the export returned unreadable data	匯出傳回了無法讀取的資料
 @msg	{status} ({e})	{status} ({e})
-@msg	Saved {path} with {_1} note(s): {first}	已儲存 {path}，附有 {_1} 則註解：{first}
 @msg	Couldn't open {name}: {e}	無法開啟 {name}：{e}
 @msg	Couldn't read {name}: {e}	無法讀取 {name}：{e}
 @msg	Internal error: {msg} (please report this bug)	內部錯誤：{msg} (請回報此錯誤)
@@ -2286,6 +2290,8 @@ file-filter	Templates	範本
 @msgplural	Copied the CSS of {n} object|Copied the CSS of {n} objects	已複製 {n} 個物件的 CSS
 @msgplural	Downloaded {n} file|Downloaded {n} files	已下載 {n} 個檔案
 @msgplural	Exported {n} file to {folder}|Exported {n} files to {folder}	已將 {n} 個檔案匯出至 {folder}
+@msg	All colors are within the CMYK gamut	所有顏色皆在 CMYK 色域內
+@msgplural	{n} color is out of the CMYK gamut|{n} colors are out of the CMYK gamut	{n} 個顏色超出 CMYK 色域
 @msg	Unembedded to {_1}	已取消內嵌至 {_1}
 @msg	no swatch library `{l}` (see swatch.library.list)	沒有色票資料庫 `{l}` (請參閱 swatch.library.list)
 @msg	no user library folder here	此處沒有使用者資料庫資料夾
@@ -2301,8 +2307,10 @@ file-filter	Templates	範本
 @msg	there are no printer settings to open here	此處沒有可開啟的印表機設定
 @msg	Couldn't save recovery data: {e}	無法儲存復原資料：{e}
 @msg	Saved recovery data for {title}	已儲存 {title} 的復原資料
-@msg	Discarded {_1} recovered document(s)	已捨棄 {_1} 份復原的文件
-@msg	Restored {_1} recovered document(s): save them to keep them	已還原 {_1} 份復原的文件：請儲存以保留
+@msgplural	Discarded {n} recovered document|Discarded {n} recovered documents	已捨棄 {n} 份復原的文件
+@msgplural	Restored {n} recovered document: save it to keep it|Restored {n} recovered documents: save them to keep them	已還原 {n} 份復原的文件：請儲存以保留
+@msgplural	Opened with {n} note: {first}|Opened with {n} notes: {first}	已開啟，附有 {n} 則註解：{first}
+@msgplural	Saved {path} with {n} note: {first}|Saved {path} with {n} notes: {first}	已儲存 {path}，附有 {n} 則註解：{first}
 @msg	Saving recovery data for {_1}	正在儲存 {_1} 的復原資料
 @msg	This shortcut file is in a form VectorCraft can't read.	VectorCraft 無法讀取此快速鍵檔案的格式。
 @msg	bad shortcut	快速鍵無效
@@ -2446,8 +2454,10 @@ file-filter	Templates	範本
 @msg	Batch: {count} processed, {failed} failed	批次：已處理 {count} 個，失敗 {failed} 個
 @msg	choose a destination folder	請選擇目的地資料夾
 @msg	choose a source folder	請選擇來源資料夾
+@msg	columns {first} and {column} both name the variable `{name}`	第 {first} 欄和第 {column} 欄都指定了變數 `{name}`
 @msg	open a document with data sets	請開啟含有資料集的文件
 @msg	nothing in data set {name} was applied: no object is bound to a variable it has a value for	資料集 {name} 未套用任何內容：沒有物件綁定到該資料集中有值的變數
+@msg	no bound object reports a value (locked objects and embedded images report none)	沒有綁定的物件回報值 (鎖定的物件和內嵌的影像不回報值)
 @msg	the action has no steps	動作沒有步驟
 @msg	cancelled; nothing was changed	已取消；未做任何變更
 @msg	Save writes {_1}, not {_2}: use file.saveAsTemplate to write it	「儲存」會寫入 {_1}，而非 {_2}：若要寫入該格式，請使用 file.saveAsTemplate
@@ -3073,7 +3083,6 @@ file-filter	Templates	範本
 	Open Recent Files	開啟最近使用的檔案
 	Open Swatch Library	開啟色票資料庫
 	Open the URL in the web browser	在網頁瀏覽器中開啟網址
-	Opened with {} note(s): {}	已開啟，附 {} 則附註：{}
 	OpenType	OpenType
 	Open…	開啟…
 	Optical	視覺
@@ -3135,7 +3144,6 @@ file-filter	Templates	範本
 	Package collects a saved document with its linked files and fonts.	封裝會將已儲存的文件連同其連結檔案與字體一併收集。
 	Package created	已建立封裝
 @plural	Packaged {n} file {note} in {folder}|Packaged {n} files {note} in {folder}	已將 {n} 個檔案封裝於 {folder}{note}
-	Packaged {n} file(s){note}	已封裝 {n} 個檔案{note}
 	Package…	封裝…
 	Page	頁面
 	Page information	頁面資訊
@@ -3338,6 +3346,10 @@ digits	Telugu	泰盧固數字
 digits	Kannada	坎那達數字
 digits	Malayalam	馬來亞拉姆數字
 	Proportional Lining	比例齊線數字
+	Position:	位置：
+	Default Position	預設位置
+	Numerator	分子
+	Denominator	分母
 	Proportional Oldstyle	比例舊式數字
 	Pucker & Bloat…	縮攏與膨脹…
 	Pucker Tool	縮攏工具
@@ -3495,9 +3507,6 @@ digits	Malayalam	馬來亞拉姆數字
 	Relink	重新連結
 	Relink Linked Files to the Document	將連結檔案重新連結至文件
 	Relink to Folder…	重新連結至資料夾…
-	Relinked {n} image(s)	已重新連結 {n} 張影像
-	Relinked {n} image(s); not in that folder: {}	已重新連結 {n} 張影像；不在該資料夾中：{}
-	Relinked {} image(s)	已重新連結 {} 張影像
 	Relink…	重新連結…
 	Find Linked Files	尋找連結檔案
 	Find Linked Files in Folder…	在資料夾中尋找連結檔案…
@@ -3579,7 +3588,6 @@ digits	Malayalam	馬來亞拉姆數字
 	Restore every preference to its default (applied on OK)	將所有偏好設定還原為預設值 (按下確定後套用)
 	Restore Recovered Documents	還原找回的文件
 	Restored documents open unsaved: save them to keep them.	還原的文件會以未儲存狀態開啟：請儲存以保留。
-	Restored {} recovered document(s): save them to keep them	已還原 {} 份復原的文件：請儲存以保留
 	Restrict printing, editing and other tasks	限制列印、編輯及其他操作
 	Reverse Front to Back	反轉前後順序
 	Reverse Gradient	反轉漸層
@@ -3747,7 +3755,6 @@ digits	Malayalam	馬來亞拉姆數字
 	Saved Views	已儲存的檢視
 	Saved {n} files beside {path}	已將 {n} 個檔案儲存於 {path} 旁
 	Saved {path}	已儲存 {path}
-	Saved {path} with {} note(s): {first}	已儲存 {path}，附 {} 則附註：{first}
 	Saves the current bars, toolbar and panel layout.	儲存目前的列、工具列與面板配置。
 	Save…	儲存…
 	Saving	正在儲存
@@ -4404,7 +4411,6 @@ digits	Malayalam	馬來亞拉姆數字
 @msg	linked pictures show the low-resolution preview saved in the file until their files are found: relink them in the Links panel	連結的圖片在找到其檔案之前顯示檔案中儲存的低解析度預覽：請在「連結」面板中重新連結
 @msg	area type in frames too short for a line of the font it shows in got taller frames ({_1}): their type wouldn't show otherwise	框架高度不足以容納所顯示字體一行的區域文字已加高框架 ({_1})：否則文字不會顯示
 	Update Modified Links	更新已修改的連結
-	Updated {} image(s)	已更新 {} 張影像
 	UPPERCASE	全部大寫
 	URL:	URL：
 	Use 	使用 
@@ -4459,7 +4465,12 @@ digits	Malayalam	馬來亞拉姆數字
 	Lock Variables	鎖定變數
 	Unlock Variables	解除鎖定變數
 @msg	variables are locked	變數已鎖定
+@msg	more than {MAX_CSV_ROWS} data sets: Import Data Sets reads at most {MAX_CSV_ROWS}	資料集超過 {MAX_CSV_ROWS} 個：「匯入資料集」最多讀取 {MAX_CSV_ROWS} 個
+@msg	more than {MAX_CSV_COLS} variables: Import Data Sets reads at most {MAX_CSV_COLS}	變數超過 {MAX_CSV_COLS} 個：「匯入資料集」最多讀取 {MAX_CSV_COLS} 個
 @msg	variables that aren't text were left out: {kinds}	已略過非文字變數：{kinds}
+@msg	a new document won't read these variables back with their kind: {names}	新文件不會以原類型讀回這些變數：{names}
+@msg	a new document refuses this file because of these variables: {names}	新文件會因這些變數而拒絕此檔案：{names}
+@msg	the header `{header}` for `{name}` would read back as the variable `{other}`: rename one of them	`{name}` 的標題 `{header}` 會被讀作變數 `{other}`：請重新命名其中一個
 	List Variables	列出變數
 	Bind Variable	綁定變數
 	Unbind Variable	解除變數綁定
@@ -5238,6 +5249,7 @@ lighting	Light	光源
 	Ruby…	注音…
 	Ruby	注音
 	Geometric Guides	幾何參考線
+	Geometric Patterns	幾何圖樣
 	Ease In	緩入
 	Ease Out	緩出
 	Ease In Out	緩入緩出
@@ -5304,7 +5316,7 @@ axis	Y Axis	Y 軸
 	On Artboards	在工作區域上
 	All Artboards	所有工作區域
 	Include Objects On Canvas	包含畫布上的物件
-	Result(s): {count}	結果：{count}
+@plural	Result: {n}|Results: {n}	結果：{n}
 @msg	select one object	請選取一個物件
 @msg	Global Edit works on paths, compound paths, symbol instances and groups of them	整體編輯適用於路徑、複合路徑、符號實體及其群組
 @msg	no similar objects found (rotated or reflected copies are not matched); change the Global Edit Options and try again	找不到相似的物件（旋轉或鏡像的副本不會相符）；請變更整體編輯選項後再試一次
@@ -5562,6 +5574,11 @@ anchor	Points:	點：
 	Case	大小寫
 @msg	{label} must be a number	{label} 必須是數字
 @msg	{label} must be a number of at least 0.1	{label} 必須是至少 0.1 的數字
+	Advanced Character Formats	進階字元格式
+	Horizontal Scale	水平縮放
+	Vertical Scale	垂直縮放
+@msg	{label} must be a number from {min} to {max}	{label} 必須是 {min} 到 {max} 之間的數字
+@msg	{label} must be a number above 0 and at most {max}	{label} 必須是大於 0 且不超過 {max} 的數字
 @msg	no character style `{name}`	找不到字元樣式 `{name}`
 
 # Color Effects add-on: Duotone (Effect › Color Effects) and Print Ink Fixes (Object › Plug-ins › Color Effects).

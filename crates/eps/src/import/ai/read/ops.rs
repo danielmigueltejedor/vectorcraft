@@ -1,9 +1,9 @@
 use super::containers::close;
 use super::document::slot_of;
-use super::types::{BLENDS, FLIP, Frame, IGNORED, Kind, MAX_DEPTH};
+use super::types::{BLENDS, FLIP, Frame, GRAPH_OPS, GRAPH_PLAIN, GRAPH_UNENDED, IGNORED, Kind, MAX_DEPTH};
 use super::{
-    Affine, Appearance, AppearanceItem, Arc, BlendMode, Dash, FillLayer, FillRule, Gradient, GradientDef, HashMap, HashSet, Instance, Knockout,
-    LayerColor, LineCap, LineJoin, Node, NodeId, NodeKind, Paint, Reader, Rect, StrokeLayer, V, obj, paint,
+    Affine, Appearance, AppearanceItem, Arc, BlendMode, Dash, FillLayer, FillRule, Gradient, GradientDef, Graph, HashMap, HashSet, Instance,
+    Knockout, LayerColor, LineCap, LineJoin, Node, NodeId, NodeKind, Paint, Reader, Rect, StrokeLayer, V, obj, paint,
 };
 
 impl<'a> Reader<'a> {
@@ -48,6 +48,15 @@ impl<'a> Reader<'a> {
         self.open(Kind::Mask, hidden)
     }
 
+    /// `LB`: a graph started in this layer that hasn't ended doesn't go on past it; the layer ends.
+    fn layer_end(&mut self) -> Result<(), String> {
+        if self.graph.as_ref().is_some_and(|g| g.frames >= self.frames.len()) {
+            self.graph = None;
+            self.warn(GRAPH_UNENDED);
+        }
+        self.end_layer_in_mask()
+    }
+
     pub(super) fn op(&mut self, w: &str, hidden: bool) -> Result<(), String> {
         if self.blend_record.is_some() {
             self.end_blend();
@@ -77,6 +86,9 @@ impl<'a> Reader<'a> {
         let mesh_ended = std::mem::take(&mut self.mesh_ended);
         let vals = self.operands();
         let vals = self.take_head(vals);
+        if self.graph_record(w, hidden) {
+            return Ok(());
+        }
         // Only `Bh` reads an undefined number. Anywhere else it would reach a point or a size, so
         // the operator is one the reader doesn't know, as before.
         if w != "Bh" && !self.frames.is_empty() && vals.iter().any(|v| matches!(v, V::Num(n) if n.is_nan())) {
@@ -125,24 +137,34 @@ impl<'a> Reader<'a> {
                 self.end_path_quietly();
                 self.open(Kind::Compound, hidden)?
             }
+            // A wraparound group takes no operands and isn't an element of a compound path.
+            "*w" | "*W" if !vals.is_empty() => return Err(format!("`{w}` takes no operands")),
+            "*w" if self.frames.iter().any(|f| matches!(f.kind, Kind::Compound)) => {
+                return Err("a wraparound group is inside a compound path".into());
+            }
+            "*w" => {
+                self.end_path_quietly();
+                self.open(Kind::Wrap, hidden)?
+            }
             "q" => {
                 self.end_path_quietly();
                 self.open(Kind::Clip, hidden)?
             }
-            "U" | "*U" | "Q" => self.end_container(w, hidden)?,
+            "U" | "*U" | "*W" | "Q" => self.end_container(w, hidden)?,
             "Lb" => self.layer_attrs(&vals),
             "Ln" => {
                 if let Some(Frame { kind: Kind::Layer(a), .. }) = self.frames.last_mut() {
                     a.name = vals.iter().rev().find_map(V::text).unwrap_or_default();
                 }
             }
-            "LB" => self.end_layer()?,
+            "LB" => self.layer_end()?,
             // Paths.
             "m" | "l" | "L" | "c" | "C" | "v" | "V" | "y" | "Y" => self.path_op(w, &vals)?,
             "h" => close(&mut self.path),
             // Ends a path that stays open.
             "H" => {}
             "W" => self.clip_next = true,
+            "Mb" | "Mv" | "Md" | "ME" | "MB" | "Mi" => self.multi_mask_op(w)?,
             // A text object's frame or path.
             "N" | "n" | "F" | "f" | "S" | "s" | "B" | "b" if self.in_text_path() => self.text_path(),
             "N" | "n" | "F" | "f" | "S" | "s" | "B" | "b" => self.paint(w, hidden, false)?,
@@ -158,6 +180,13 @@ impl<'a> Reader<'a> {
             "O" => self.gs.overprint_fill = Self::nums(&vals).last() == Some(&1.0),
             "R" => self.gs.overprint_stroke = Self::nums(&vals).last() == Some(&1.0),
             "XR" => self.gs.rule = if Self::nums(&vals).last() == Some(&1.0) { FillRule::EvenOdd } else { FillRule::NonZero },
+            // Show Center (§12): 1 shows the center point of the paths that follow, and 0 leaves
+            // them at their default, which hides it on an imported path.
+            "Ap" => match Self::nums(&vals).last().copied() {
+                Some(1.0) => self.gs.show_center = Some(true),
+                Some(0.0) => self.gs.show_center = None,
+                _ => {}
+            },
             "w" => {
                 if let Some(v) = Self::nums(&vals).last().filter(|v| v.is_finite() && **v >= 0.0) {
                     self.gs.width = *v;
@@ -276,15 +305,13 @@ impl<'a> Reader<'a> {
             "TP" => self.end_text_path(),
             "TO" => self.end_text(hidden)?,
             "Tx" | "Tj" | "TX" => self.text_body(w, &vals),
-            "Tr" | "Tf" | "Ts" | "Tz" | "Tt" | "TA" | "Tl" | "Ta" | "Ti" => self.text_attr(w, &vals),
-            // Attributes the reader doesn't keep (kerning pairs, spacing, hanging punctuation,
-            // Far-Eastern type) and final-form positions (§15.3).
-            "Tk" | "TK" | "TC" | "TW" | "Tq" | "Tc" | "Tw" | "Tm" | "Td" | "T*" | "TR" | "T+" | "T-" | "TV" | "Tv" | "Ty" | "TY" | "TG" | "Tg"
-            | "Tu" | "Xu" => {}
-            // Hyphenation and tab-ruler attributes the reader doesn't keep either (§22): `Th`
-            // hyphen control, `XL` hyphenation language, `Xb`/`XB` a tab definition (and the `Xe`
-            // tab descriptions between them).
-            "Th" | "XL" | "Xb" | "XB" | "Xe" => {}
+            "Tr" | "Tf" | "Ts" | "Tz" | "Tt" | "TA" | "Tl" | "Ta" | "Ti" | "TC" | "TW" | "Tq" | "Th" => self.text_attr(w, &vals),
+            // Attributes the reader doesn't keep (kerning pairs, Far-Eastern type) and final-form
+            // positions (§15.3).
+            "Tk" | "TK" | "Tc" | "Tw" | "Tm" | "Td" | "T*" | "TR" | "T+" | "T-" | "TV" | "Tv" | "Ty" | "TY" | "TG" | "Tg" | "Tu" | "Xu" => {}
+            // The hyphenation language and tab rulers, which the reader doesn't keep either (§22): `XL`,
+            // `Xb`/`XB` a tab definition (and the `Xe` tab descriptions between them).
+            "XL" | "Xb" | "XB" | "Xe" => {}
             "TE" => self.te(&vals),
             // An image whose samples follow in comment lines (read at `%AI5_EndRaster`).
             "XI" if self.raster.is_some() => {
@@ -308,6 +335,33 @@ impl<'a> Reader<'a> {
             _ => self.note_unknown(w, hidden),
         }
         Ok(())
+    }
+
+    /// A graph's records (version 7 specification §17 and appendix A): `%_Gs` starts the graph on
+    /// a layer, `GS` ends it, and its data and settings (the operators in [`GRAPH_OPS`], and any
+    /// operator on a `%_` line between `Gt` and `GT`) are left out with their operands. Its drawn
+    /// art, and anything else, is read as usual. `true` when `w` was one of them.
+    fn graph_record(&mut self, w: &str, hidden: bool) -> bool {
+        let Some(g) = self.graph.as_mut() else {
+            // Outside a graph, its operators stay ones the reader doesn't know.
+            if w == "Gs" && hidden && !self.frames.is_empty() {
+                self.graph = Some(Graph { settings: false, frames: self.frames.len() });
+                self.warn(GRAPH_PLAIN);
+                return true;
+            }
+            return false;
+        };
+        match w {
+            // A graph doesn't start inside another: the one being read goes on.
+            "Gs" => self.warn(GRAPH_UNENDED),
+            "GS" => self.graph = None,
+            "Gt" => g.settings = true,
+            "GT" => g.settings = false,
+            _ if GRAPH_OPS.contains(&w) => {}
+            _ if hidden && g.settings => {}
+            _ => return false,
+        }
+        true
     }
 
     /// `… Lb`: a layer's options, `visible preview unlocked printing dimmed`, then the colour index

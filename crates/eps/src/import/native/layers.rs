@@ -1,4 +1,4 @@
-use super::build::{Page, build, build_from};
+use super::build::{PAGE_MOVE, Page, build, build_from, build_on_page};
 use super::slots::LAYERS_UNREAD;
 use super::{Affine, Arc, Cow, Document, Imported, Node, NodeKind, PathData, Rect, Vec2, ai};
 
@@ -13,8 +13,11 @@ pub(in super::super) fn layered(ps: &[u8], visible: Imported, trust: bool) -> Im
     let Some(data) = editing_copy(ps) else { return visible };
     // The layer tree is kept from the structure read, for the page to come in on when the layers
     // can't be used.
+    // Private data kept apart from the program: the program's own header gives the author and
+    // custom colors the private data's header may lack.
+    let read = |d: &[u8]| if matches!(data, Ok(Cow::Owned(_))) { ai::read_beside(d, true, ps) } else { ai::read(d, true) };
     let (tree, result) = match data.as_deref() {
-        Ok(d) => match ai::read(d, true) {
+        Ok(d) => match read(d) {
             Ok(s) => (layer_tree(&s.doc.layers), build_from(s, d, Some(&visible.document), Page::Art, false, trust, 1.0)),
             Err(why) => (vec![], Err(why)),
         },
@@ -204,7 +207,7 @@ fn place_art(layer: &mut Node, pages: &[Rect], moves: &[Vec2]) {
         let fit = |p: &Rect| (p.intersect(r).area().max(0.0), -(p.center() - r.center()).hypot());
         let Some((i, _)) = pages.iter().map(fit).enumerate().max_by(|(_, a), (_, b)| a.0.total_cmp(&b.0).then(a.1.total_cmp(&b.1))) else { continue };
         if let Some(v) = moves.get(i).filter(|v| **v != Vec2::ZERO) {
-            Arc::make_mut(child).transform(Affine::translate(*v), false);
+            Arc::make_mut(child).transform(Affine::translate(*v), PAGE_MOVE);
         }
     }
 }
@@ -214,6 +217,16 @@ fn place_art(layer: &mut Node, pages: &[Rect], moves: &[Vec2]) {
 pub fn ai_alone(private: &[u8]) -> Result<(Document, Vec<String>), String> {
     let data = ai::decode_private(private)?;
     build(&data, None, Page::Artboard, false, false, 1.0)
+}
+
+/// [`ai_alone`] for a `.ai` whose PDF part can't be read, its first page `page` (width and height)
+/// points large in units of `unit` points (its `UserUnit`): editing data whose first artboard, or
+/// whose art's box, has the page's size in those units, and not in points, comes in `unit` times as
+/// large, as [`layered_ai`] reads it. A page turned a quarter (`/Rotate 90`) is measured either
+/// way round.
+pub fn ai_alone_on_page(private: &[u8], page: (f64, f64), unit: f64) -> Result<(Document, Vec<String>), String> {
+    let data = ai::decode_private(private)?;
+    build_on_page(&data, page, unit)
 }
 
 /// Does the editing data (or a program in the legacy format) have layers?

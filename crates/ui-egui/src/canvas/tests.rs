@@ -2588,7 +2588,7 @@ fn pan_fills_the_area_the_last_frame_leaves() {
     assert!(app.canvas.fill_worker.as_ref().unwrap().pending.is_none(), "the late fill was taken");
     // A pan with Outline turned on: the frame shown's options are not the ones asked for, and
     // no fill is asked for.
-    app.ui.view.outline = true;
+    app.view_mut().unwrap().outline = true;
     app.view_mut().unwrap().center = Point::new(400.0, 150.0);
     frame(&mut app);
     assert!(jobs.try_iter().last().is_some_and(|j| j.key.outline), "the outline frame is on the worker");
@@ -3521,7 +3521,7 @@ fn scrolls_and_pans_move_the_view_by_whole_device_pixels() {
 /// another document, or when the device pixels a point changed.
 #[test]
 fn a_scrolls_leftover_pixel_part_carries_only_to_the_same_view() {
-    let view = View { zoom: 1.0, center: Point::new(100.0, 100.0), fitted: true, rotation: 0.0, artboard: 0 };
+    let view = View { zoom: 1.0, center: Point::new(100.0, 100.0), fitted: true, rotation: 0.0, artboard: 0, outline: false };
     let mut v = view;
     let rest = scroll_by(&mut v, 1, 1.0, vec2(0.4, -0.3), ScrollRest::default());
     assert_eq!(v.center, view.center, "less than half a pixel does not move the view");
@@ -3765,6 +3765,64 @@ fn show_live_paint_gaps_draws_the_selected_groups_gaps_in_their_preview_color() 
     assert!(!serde_json::from_value::<crate::UiState>(saved).unwrap().view.live_paint_gaps);
 }
 
+/// #3797: View › Outline is a setting of each document's view. A document opened or made after
+/// another was put in Outline opens in Preview, where a click inside its fill picks it, and each
+/// document keeps its own setting.
+#[test]
+fn outline_is_per_document_and_new_documents_start_in_preview() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+    app.session.execute("shape.rectangle", &json!({"x": 20, "y": 20, "width": 100, "height": 100})).unwrap();
+    app.sync_views();
+    let inside = Point::new(70.0, 70.0);
+    let picks_fill = |app: &VectorcraftApp| super::outline::hit_at(app, inside, 1.0).is_some();
+    assert!(picks_fill(&app), "Preview picks the fill");
+    app.run("view.outline", json!({})).unwrap();
+    assert!(app.outline_view() && app.view_info().outline);
+    assert!(!picks_fill(&app), "Outline picks only the path");
+    // An SVG opened now opens in Preview, its fill drawn and picked.
+    let svg =
+        br##"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect x="20" y="20" width="100" height="100" fill="#ff0000"/></svg>"##;
+    crate::io::open_bytes(&mut app, "b.svg", svg, None).unwrap();
+    assert_eq!(app.session.active_index(), Some(1));
+    assert!(!app.outline_view() && !app.view_info().outline, "the opened document is in Preview");
+    assert!(picks_fill(&app));
+    assert_eq!(crate::menus::dynamic_label(&app, "view.outline", "Outline"), "Outline");
+    assert_eq!(crate::menus::checked(&app, "view.outline", &json!({})), Some(false));
+    // A new document opens in Preview too.
+    app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+    assert!(!app.outline_view());
+    // The first document is still in Outline.
+    app.session.execute("document.activate", &json!({"index": 0})).unwrap();
+    assert!(app.outline_view() && !picks_fill(&app));
+    assert_eq!(crate::menus::dynamic_label(&app, "view.outline", "Outline"), "Preview");
+    assert_eq!(crate::menus::checked(&app, "view.outline", &json!({})), Some(true));
+    // Without a document there is nothing to put in Outline.
+    while !app.session.documents().is_empty() {
+        app.session.execute("file.close", &json!({})).unwrap();
+    }
+    app.sync_views();
+    assert!(!app.outline_view() && !crate::menus::enabled(&app, "view.outline"));
+    assert!(app.run("view.outline", json!({})).is_err());
+}
+
+/// #3797: a preferences file saved while View › Outline was an interface setting still loads, with
+/// its other view settings, and its Outline value does not put a document in Outline.
+#[test]
+fn old_outline_preference_loads_but_does_not_restore_outline() {
+    let mut saved = serde_json::to_value(crate::UiState::default()).unwrap();
+    assert!(saved["view"].get("outline").is_none(), "Outline is not saved with the interface");
+    saved["view"]["outline"] = json!(true);
+    saved["view"]["rulers"] = json!(true);
+    let ui = serde_json::from_value::<crate::UiState>(saved).unwrap().sanitized();
+    assert!(ui.view.rulers, "the other view settings load");
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.ui = ui;
+    app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+    app.sync_views();
+    assert!(!app.outline_view(), "a new document is in Preview");
+}
+
 /// #511: a star shows a widget in each of its ten corners with Direct Selection (none with
 /// the Selection tool: it isn't a live shape); View → Hide Corner Widget hides them.
 #[test]
@@ -3828,6 +3886,34 @@ fn a_selected_ellipse_shows_its_pie_widgets() {
     app.select_tool("selection");
     app.run("view.boundingBox", json!({})).unwrap();
     assert_eq!(widgets(&mut app), 0, "no bounding box, no widgets");
+}
+
+/// A selected Objects on Path group shows its Rotate All widget with the Selection and Objects on
+/// Path tools.
+#[test]
+fn a_selected_objects_on_path_group_shows_its_rotate_all_widget() {
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    let id = |v: serde_json::Value| v["id"].as_u64().unwrap();
+    let line = id(app.session.execute("shape.line", &json!({"x1": 20, "y1": 200, "x2": 380, "y2": 200})).unwrap());
+    let a = id(app.session.execute("shape.rectangle", &json!({"x": 40, "y": 40, "width": 20, "height": 20})).unwrap());
+    let b = id(app.session.execute("shape.rectangle", &json!({"x": 80, "y": 40, "width": 20, "height": 20})).unwrap());
+    app.run("select.set", json!({"ids": [a, b]})).unwrap();
+    app.session.execute("object.objectsOnPath.attach", &json!({"path": line})).unwrap();
+    let ctx = egui::Context::default();
+    let widgets = |app: &mut VectorcraftApp| {
+        let r = vectorcraft_tools::objects_on_path::ROTATE_ALL_RADIUS_PX;
+        shapes(app, &ctx).iter().filter(|s| matches!(s, Shape::Circle(c) if c.radius == r && c.fill == Color32::WHITE)).count()
+    };
+    app.select_tool("selection");
+    assert_eq!(widgets(&mut app), 1);
+    app.select_tool("objectsOnPath");
+    assert_eq!(widgets(&mut app), 1);
+    app.select_tool("directSelection");
+    assert_eq!(widgets(&mut app), 0);
+    app.select_tool("selection");
+    app.run("select.set", json!({"ids": [a]})).unwrap();
+    assert_eq!(widgets(&mut app), 0, "an object in the group, not the group");
 }
 
 /// The shapes Type → Show Hidden Characters draws in one frame, seen through `xf`.
@@ -6318,6 +6404,69 @@ fn a_bezier_drag_preview_follows_the_pointer_back_into_the_window_and_to_the_rel
     // (egui hands the press the frame's last pointer position, so it lands within the jitter.)
     let a = first_anchor(&app);
     assert!(a.p.distance(xf.to_doc(c)) < 1.0 && a.h_out == a.p && a.h_in == a.p, "corner anchor where pressed: {a:?}");
+    assert!(app.session.active().unwrap().interaction.is_none(), "committed");
+}
+
+/// A drag ends where its button went up. Pointer moves that come after the release in the same
+/// frame are hover: they do not stretch a Rectangle drag, add to a Pencil stroke or move dragged
+/// art.
+#[test]
+fn a_drag_ends_where_the_button_went_up_in_its_frame() {
+    use egui::{Event, Modifiers};
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 400, "height": 300})).unwrap();
+    app.ui.view.smart_guides = false;
+    app.ui.view.snap_to_point = false;
+    let ctx = egui::Context::default();
+    frame(&mut app, &ctx, vec![]);
+    let xf = Xf::new(app.canvas_rect.unwrap(), app.view().unwrap());
+    let button = |pos, pressed| Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Modifiers::NONE };
+    let last_bounds = |app: &VectorcraftApp| {
+        let st = app.session.active().unwrap();
+        st.doc.node(st.selection.objects[0]).unwrap().geometric_bounds().unwrap()
+    };
+    let center = app.canvas_rect.unwrap().center();
+    let far = center + vec2(150.0, 100.0);
+
+    app.select_tool("rectangle");
+    let a = center - vec2(100.0, 60.0);
+    let end = a + vec2(80.0, 50.0);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(a)]);
+    frame(&mut app, &ctx, vec![button(a, true)]);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(a + vec2(40.0, 20.0))]);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(end), button(end, false), Event::PointerMoved(far)]);
+    let r = last_bounds(&app);
+    let want = xf.to_doc(end);
+    assert!((r.x1 - want.x).abs() < 1e-3 && (r.y1 - want.y).abs() < 1e-3, "the rectangle ends at the release: {r:?}, {want:?}");
+
+    app.session.execute("select.none", &json!({})).unwrap();
+    app.select_tool("pencil");
+    let a = center - vec2(100.0, 0.0);
+    let end = a + vec2(120.0, 0.0);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(a)]);
+    frame(&mut app, &ctx, vec![button(a, true)]);
+    for x in [20.0, 40.0, 60.0] {
+        frame(&mut app, &ctx, vec![Event::PointerMoved(a + vec2(x, 0.0))]);
+    }
+    frame(&mut app, &ctx, vec![Event::PointerMoved(a + vec2(90.0, 0.0)), Event::PointerMoved(end), button(end, false), Event::PointerMoved(far)]);
+    let r = last_bounds(&app);
+    let (left, right) = (xf.to_doc(a), xf.to_doc(end));
+    assert!((r.x0 - left.x).abs() < 1.0 && (r.x1 - right.x).abs() < 1.0 && r.height() < 1.0, "the stroke ends at the release: {r:?}");
+
+    app.session.execute("shape.rectangle", &json!({"x": 250, "y": 40, "width": 60, "height": 40})).unwrap();
+    app.session.execute("paint.setFill", &json!({"color": "#3366cc"})).unwrap();
+    app.session.execute("select.none", &json!({})).unwrap();
+    app.select_tool("selection");
+    let before = Rect::new(250.0, 40.0, 310.0, 80.0);
+    let grab = xf.to_screen(Point::new(280.0, 60.0));
+    let to = grab + vec2(30.0, 40.0);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(grab)]);
+    frame(&mut app, &ctx, vec![button(grab, true)]);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(grab + vec2(10.0, 10.0))]);
+    frame(&mut app, &ctx, vec![Event::PointerMoved(to), button(to, false), Event::PointerMoved(far)]);
+    let moved = last_bounds(&app);
+    let d = xf.to_doc(to) - xf.to_doc(grab);
+    assert!((moved.x0 - before.x0 - d.x).abs() < 1e-3 && (moved.y0 - before.y0 - d.y).abs() < 1e-3, "the art moves to the release: {moved:?}, {d:?}");
     assert!(app.session.active().unwrap().interaction.is_none(), "committed");
 }
 
